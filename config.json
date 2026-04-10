@@ -1,0 +1,8 @@
+{
+  "default_quality": "1080p",
+  "download_format": "mp4",
+  "save_location": "D:\\code\\ytdown",
+  "dark_theme": true,
+  "wifi_only": false,
+  "auto_clear_queue": false
+}

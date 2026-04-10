@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html class="light" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StreamVault</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            "colors": {
+                "error-container": "var(--error-container)",
+                "on-secondary-container": "var(--on-secondary-container)",
+                "surface-variant": "var(--surface-variant)",
+                "on-background": "var(--on-background)",
+                "on-error": "var(--on-error)",
+                "surface-dim": "var(--surface-dim)",
+                "on-tertiary-fixed": "var(--on-tertiary-fixed)",
+                "primary": "var(--primary)",
+                "on-primary-container": "var(--on-primary-container)",
+                "on-error-container": "var(--on-error-container)",
+                "on-primary-fixed": "var(--on-primary-fixed)",
+                "on-secondary-fixed": "var(--on-secondary-fixed)",
+                "primary-fixed": "var(--primary-fixed)",
+                "surface-container-low": "var(--surface-container-low)",
+                "secondary": "var(--secondary)",
+                "tertiary": "var(--tertiary)",
+                "inverse-primary": "var(--inverse-primary)",
+                "on-secondary": "var(--on-secondary)",
+                "secondary-container": "var(--secondary-container)",
+                "primary-container": "var(--primary-container)",
+                "on-primary-fixed-variant": "var(--on-primary-fixed-variant)",
+                "tertiary-fixed-dim": "var(--tertiary-fixed-dim)",
+                "on-surface": "var(--on-surface)",
+                "on-tertiary-fixed-variant": "var(--on-tertiary-fixed-variant)",
+                "inverse-on-surface": "var(--inverse-on-surface)",
+                "inverse-surface": "var(--inverse-surface)",
+                "surface-container": "var(--surface-container)",
+                "on-tertiary": "var(--on-tertiary)",
+                "surface": "var(--surface)",
+                "tertiary-fixed": "var(--tertiary-fixed)",
+                "background": "var(--background)",
+                "on-primary": "var(--on-primary)",
+                "surface-container-lowest": "var(--surface-container-lowest)",
+                "surface-container-high": "var(--surface-container-high)",
+                "surface-bright": "var(--surface-bright)",
+                "tertiary-container": "var(--tertiary-container)",
+                "primary-fixed-dim": "var(--primary-fixed-dim)",
+                "on-tertiary-container": "var(--on-tertiary-container)",
+                "outline": "var(--outline)",
+                "error": "var(--error)",
+                "outline-variant": "var(--outline-variant)",
+                "secondary-fixed": "var(--secondary-fixed)",
+                "surface-tint": "var(--surface-tint)",
+                "on-surface-variant": "var(--on-surface-variant)",
+                "surface-container-highest": "var(--surface-container-highest)",
+                "secondary-fixed-dim": "var(--secondary-fixed-dim)",
+                "on-secondary-fixed-variant": "var(--on-secondary-fixed-variant)"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            }
+        },
+    },
+}
+</script>
+<style>
+:root.light {
+    --primary: #bc0100;
+    --on-primary: #ffffff;
+    --primary-container: #eb0000;
+    --on-primary-container: #fffbff;
+    --secondary: #5f5e5e;
+    --on-secondary: #ffffff;
+    --secondary-container: #e4e2e1;
+    --on-secondary-container: #656464;
+    --tertiary: #0059ba;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #0071e8;
+    --on-tertiary-container: #fefcff;
+    --error: #ba1a1a;
+    --on-error: #ffffff;
+    --error-container: #ffdad6;
+    --on-error-container: #93000a;
+    --background: #f9f9f9;
+    --on-background: #1a1c1c;
+    --surface: #f9f9f9;
+    --on-surface: #1a1c1c;
+    --surface-variant: #e2e2e2;
+    --on-surface-variant: #603e39;
+    --outline: #956d67;
+    --outline-variant: #ebbbb4;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f3f3f3;
+    --surface-container: #eeeeee;
+    --surface-container-high: #e8e8e8;
+    --surface-container-highest: #e2e2e2;
+    --surface-dim: #dadada;
+    --surface-bright: #f9f9f9;
+    --surface-tint: #c00100;
+    --inverse-surface: #2f3131;
+    --inverse-on-surface: #f1f1f1;
+    --inverse-primary: #ffb4a8;
+    --primary-fixed: #ffdad4;
+    --on-primary-fixed: #410000;
+    --primary-fixed-dim: #ffb4a8;
+    --on-primary-fixed-variant: #930100;
+    --secondary-fixed: #e4e2e1;
+    --on-secondary-fixed: #1b1c1c;
+    --secondary-fixed-dim: #c8c6c5;
+    --on-secondary-fixed-variant: #474746;
+    --tertiary-fixed: #d7e2ff;
+    --on-tertiary-fixed: #001a40;
+    --tertiary-fixed-dim: #acc7ff;
+    --on-tertiary-fixed-variant: #004491;
+}
+
+:root.dark {
+    --primary: #ffb4a8;
+    --on-primary: #690000;
+    --primary-container: #930100;
+    --on-primary-container: #ffdad4;
+    --secondary: #c8c6c5;
+    --on-secondary: #303030;
+    --secondary-container: #474746;
+    --on-secondary-container: #e4e2e1;
+    --tertiary: #acc7ff;
+    --on-tertiary: #002f67;
+    --tertiary-container: #004491;
+    --on-tertiary-container: #d7e2ff;
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+    --background: #111414;
+    --on-background: #e2e2e2;
+    --surface: #111414;
+    --on-surface: #e2e2e2;
+    --surface-variant: #534341;
+    --on-surface-variant: #d8c2be;
+    --outline: #a08c8a;
+    --outline-variant: #534341;
+    --surface-container-lowest: #0c0f0f;
+    --surface-container-low: #1a1c1c;
+    --surface-container: #1e2020;
+    --surface-container-high: #282a2a;
+    --surface-container-highest: #333535;
+    --surface-dim: #111414;
+    --surface-bright: #373a3a;
+    --surface-tint: #ffb4a8;
+    --inverse-surface: #e2e2e2;
+    --inverse-on-surface: #2f3131;
+    --inverse-primary: #bc0100;
+    --primary-fixed: #ffdad4;
+    --on-primary-fixed: #410000;
+    --primary-fixed-dim: #ffb4a8;
+    --on-primary-fixed-variant: #930100;
+    --secondary-fixed: #e4e2e1;
+    --on-secondary-fixed: #1b1c1c;
+    --secondary-fixed-dim: #c8c6c5;
+    --on-secondary-fixed-variant: #474746;
+    --tertiary-fixed: #d7e2ff;
+    --on-tertiary-fixed: #001a40;
+    --tertiary-fixed-dim: #acc7ff;
+    --on-tertiary-fixed-variant: #004491;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.signature-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+}
+.dark .signature-gradient {
+    background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+}
+</style>
+</head>
+<body class="bg-background font-body text-on-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
+<!-- Header -->
+<header class="w-full flex justify-between items-center px-6 py-4">
+    <div class="flex items-center gap-2">
+        <span class="text-primary font-headline font-800 text-2xl tracking-tighter">VOID</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400" title="Переключить тему">
+            <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+        </button>
+        <a href="/settings" class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400">
+            <span class="material-symbols-outlined">settings</span>
+        </a>
+        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" title="Закрыть приложение">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex-1 flex items-center justify-center px-6 py-12">
+    <div class="w-full max-w-3xl flex flex-col gap-12">
+        <!-- Input Section -->
+        <div class="relative flex flex-col md:flex-row gap-4 p-3 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-surface-container">
+            <div class="flex-1 flex items-center px-4 gap-4">
+                <span class="material-symbols-outlined text-primary">link</span>
+                <input id="url-input" class="w-full bg-transparent border-none focus:ring-0 text-xl font-body text-on-surface placeholder:text-on-secondary-container" placeholder="Вставьте URL видео или плейлиста..." type="text"/>
+            </div>
+            <button id="download-btn" class="signature-gradient text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+                Скачать
+            </button>
+        </div>
+
+        <!-- Download Queue Section -->
+        <section class="flex flex-col gap-6">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="font-headline font-bold text-xl text-on-surface">Активные загрузки</h2>
+                <span id="active-count" class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-label font-semibold">0 items</span>
+            </div>
+            <div id="downloads-list" class="space-y-3">
+                <!-- Загрузки будут добавлены сюда динамически -->
+                <div id="empty-state" class="text-center py-12 text-on-secondary-container">
+                    <span class="material-symbols-outlined text-6xl mb-4 opacity-50">download</span>
+                    <p class="text-lg">Нет активных загрузок</p>
+                    <p class="text-sm mt-2">Вставьте URL выше чтобы начать загрузку</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<script>
+const API_URL = window.location.origin;
+const downloadsList = document.getElementById('downloads-list');
+const urlInput = document.getElementById('url-input');
+const downloadBtn = document.getElementById('download-btn');
+const activeCount = document.getElementById('active-count');
+const emptyState = document.getElementById('empty-state');
+
+// WebSocket подключение
+let ws = null;
+function connectWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
+    
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'progress_update') {
+            renderDownloads(data.tasks);
+            activeCount.textContent = `${data.active_count} items`;
+        }
+    };
+    
+    ws.onclose = () => {
+        setTimeout(connectWebSocket, 2000);
+    };
+}
+
+// Загрузка видео
+downloadBtn.addEventListener('click', async () => {
+    const url = urlInput.value.trim();
+    if (!url) return;
+    
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Загрузка...';
+    
+    try {
+        const response = await fetch(`${API_URL}/api/download`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+        });
+        
+        if (response.ok) {
+            urlInput.value = '';
+        }
+    } catch (err) {
+        console.error('Ошибка при загрузке:', err);
+    } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = 'Скачать';
+    }
+});
+
+// Ренер списка загрузок
+function renderDownloads(tasks) {
+    if (tasks.length === 0) {
+        emptyState.style.display = 'block';
+        downloadsList.innerHTML = '';
+        downloadsList.appendChild(emptyState);
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    downloadsList.innerHTML = tasks.map(task => {
+        const statusText = getStatusText(task.status);
+        const statusColor = getStatusColor(task.status);
+        const progressBarColor = getProgressBarColor(task.status);
+        const showActions = showActionButtons(task.status);
+        
+        return `
+        <div class="bg-surface-container-low p-5 rounded-2xl border border-surface-container flex flex-col gap-3 group hover:border-outline-variant transition-colors ${task.status === 'completed' ? 'opacity-60' : ''}">
+            <div class="flex justify-between items-start">
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-on-surface truncate pr-4">${escapeHtml(task.title || 'Загрузка...')}</h3>
+                    <p class="text-sm text-secondary mt-1">${formatBytes(task.downloaded_bytes)} / ${formatBytes(task.total_bytes)} • <span class="${statusColor} font-medium italic">${statusText}</span></p>
+                    ${task.speed ? `<p class="text-xs text-secondary mt-1">${task.speed} • ETA: ${task.eta}</p>` : ''}
+                </div>
+                <div class="flex gap-2">
+                    ${showActions ? `
+                        ${task.status === 'paused' ? `
+                        <button onclick="resumeTask('${task.id}')" class="text-primary hover:bg-primary/10 p-1 rounded-full transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">play_arrow</span>
+                        </button>
+                        ` : ''}
+                        ${task.status === 'downloading' ? `
+                        <button onclick="pauseTask('${task.id}')" class="text-on-secondary-container hover:text-primary p-1 rounded-full transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">pause</span>
+                        </button>
+                        ` : ''}
+                        <button onclick="cancelTask('${task.id}')" class="text-on-secondary-container hover:text-error transition-colors p-1">
+                            <span class="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+                    ` : `
+                        <button onclick="removeTask('${task.id}')" class="text-on-secondary-container hover:text-error transition-colors p-1">
+                            <span class="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+                    `}
+                </div>
+            </div>
+            <div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                <div class="${progressBarColor} h-full rounded-full transition-all duration-500" style="width: ${task.progress}%"></div>
+            </div>
+            ${task.error_message ? `<p class="text-xs text-error mt-1">${escapeHtml(task.error_message)}</p>` : ''}
+        </div>
+        `;
+    }).join('');
+}
+
+function getStatusText(status) {
+    const map = {
+        'downloading': 'Загрузка...',
+        'paused': 'Приостановлено',
+        'completed': 'Завершено',
+        'error': 'Ошибка',
+        'processing': 'Обработка...'
+    };
+    return map[status] || status;
+}
+
+function getStatusColor(status) {
+    const map = {
+        'downloading': 'text-primary',
+        'paused': 'text-on-secondary-container',
+        'completed': 'text-tertiary',
+        'error': 'text-error',
+        'processing': 'text-tertiary'
+    };
+    return map[status] || 'text-secondary';
+}
+
+function getProgressBarColor(status) {
+    const map = {
+        'downloading': 'bg-primary',
+        'paused': 'bg-secondary',
+        'completed': 'bg-tertiary',
+        'error': 'bg-error',
+        'processing': 'bg-tertiary'
+    };
+    return map[status] || 'bg-secondary';
+}
+
+function showActionButtons(status) {
+    return ['downloading', 'paused'].includes(status);
+}
+
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Действия с загрузками
+async function pauseTask(id) {
+    await fetch(`${API_URL}/api/download/${id}/pause`, { method: 'POST' });
+}
+
+async function resumeTask(id) {
+    await fetch(`${API_URL}/api/download/${id}/resume`, { method: 'POST' });
+}
+
+async function cancelTask(id) {
+    await fetch(`${API_URL}/api/download/${id}/cancel`, { method: 'POST' });
+}
+
+async function removeTask(id) {
+    await fetch(`${API_URL}/api/download/${id}`, { method: 'DELETE' });
+}
+
+// Инициализация
+connectWebSocket();
+
+// Переключение темы
+let isDarkTheme = false;
+
+document.getElementById('theme-toggle')?.addEventListener('click', async () => {
+    isDarkTheme = !isDarkTheme;
+    
+    if (isDarkTheme) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.getElementById('theme-icon').textContent = 'light_mode';
+    } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-icon').textContent = 'dark_mode';
+    }
+    
+    // Сохраняем настройку на сервере
+    try {
+        const response = await fetch(`${API_URL}/api/settings`);
+        const settings = await response.json();
+        settings.dark_theme = isDarkTheme;
+        
+        await fetch(`${API_URL}/api/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
+        });
+    } catch (err) {
+        console.error('Ошибка сохранения темы:', err);
+    }
+});
+
+// Загрузка настроек и применение темы
+async function loadThemeSettings() {
+    try {
+        const response = await fetch(`${API_URL}/api/settings`);
+        const settings = await response.json();
+        
+        isDarkTheme = settings.dark_theme;
+        
+        if (isDarkTheme) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            document.getElementById('theme-icon').textContent = 'light_mode';
+        } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+            document.getElementById('theme-icon').textContent = 'dark_mode';
+        }
+    } catch (err) {
+        console.error('Ошибка загрузки настроек темы:', err);
+    }
+}
+
+// Загрузка начального состояния
+async function loadInitialData() {
+    try {
+        const [downloadsRes, statusRes] = await Promise.all([
+            fetch(`${API_URL}/api/downloads`),
+            fetch(`${API_URL}/api/status`)
+        ]);
+
+        const downloads = await downloadsRes.json();
+        const status = await statusRes.json();
+
+        renderDownloads(downloads);
+        activeCount.textContent = `${status.active_downloads} items`;
+    } catch (err) {
+        console.error('Ошибка загрузки данных:', err);
+    }
+}
+
+loadThemeSettings();
+loadInitialData();
+
+// Закрытие приложения
+document.getElementById('close-app')?.addEventListener('click', () => {
+    if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.close();
+    }
+});
+</script>
+</body>
+</html>

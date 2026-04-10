@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html class="light" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StreamVault — Настройки</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+:root.light {
+    --primary: #bc0100;
+    --on-primary: #ffffff;
+    --primary-container: #eb0000;
+    --on-primary-container: #fffbff;
+    --secondary: #5f5e5e;
+    --on-secondary: #ffffff;
+    --secondary-container: #e4e2e1;
+    --on-secondary-container: #656464;
+    --tertiary: #0059ba;
+    --on-tertiary: #ffffff;
+    --tertiary-container: #0071e8;
+    --on-tertiary-container: #fefcff;
+    --error: #ba1a1a;
+    --on-error: #ffffff;
+    --error-container: #ffdad6;
+    --on-error-container: #93000a;
+    --background: #f9f9f9;
+    --on-background: #1a1c1c;
+    --surface: #f9f9f9;
+    --on-surface: #1a1c1c;
+    --surface-variant: #e2e2e2;
+    --on-surface-variant: #603e39;
+    --outline: #956d67;
+    --outline-variant: #ebbbb4;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f3f3f3;
+    --surface-container: #eeeeee;
+    --surface-container-high: #e8e8e8;
+    --surface-container-highest: #e2e2e2;
+    --surface-dim: #dadada;
+    --surface-bright: #f9f9f9;
+    --surface-tint: #c00100;
+    --inverse-surface: #2f3131;
+    --inverse-on-surface: #f1f1f1;
+    --inverse-primary: #ffb4a8;
+    --primary-fixed: #ffdad4;
+    --on-primary-fixed: #410000;
+    --primary-fixed-dim: #ffb4a8;
+    --on-primary-fixed-variant: #930100;
+    --secondary-fixed: #e4e2e1;
+    --on-secondary-fixed: #1b1c1c;
+    --secondary-fixed-dim: #c8c6c5;
+    --on-secondary-fixed-variant: #474746;
+    --tertiary-fixed: #d7e2ff;
+    --on-tertiary-fixed: #001a40;
+    --tertiary-fixed-dim: #acc7ff;
+    --on-tertiary-fixed-variant: #004491;
+}
+
+:root.dark {
+    --primary: #ffb4a8;
+    --on-primary: #690000;
+    --primary-container: #930100;
+    --on-primary-container: #ffdad4;
+    --secondary: #c8c6c5;
+    --on-secondary: #303030;
+    --secondary-container: #474746;
+    --on-secondary-container: #e4e2e1;
+    --tertiary: #acc7ff;
+    --on-tertiary: #002f67;
+    --tertiary-container: #004491;
+    --on-tertiary-container: #d7e2ff;
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+    --background: #111414;
+    --on-background: #e2e2e2;
+    --surface: #111414;
+    --on-surface: #e2e2e2;
+    --surface-variant: #534341;
+    --on-surface-variant: #d8c2be;
+    --outline: #a08c8a;
+    --outline-variant: #534341;
+    --surface-container-lowest: #0c0f0f;
+    --surface-container-low: #1a1c1c;
+    --surface-container: #1e2020;
+    --surface-container-high: #282a2a;
+    --surface-container-highest: #333535;
+    --surface-dim: #111414;
+    --surface-bright: #373a3a;
+    --surface-tint: #ffb4a8;
+    --inverse-surface: #e2e2e2;
+    --inverse-on-surface: #2f3131;
+    --inverse-primary: #bc0100;
+    --primary-fixed: #ffdad4;
+    --on-primary-fixed: #410000;
+    --primary-fixed-dim: #ffb4a8;
+    --on-primary-fixed-variant: #930100;
+    --secondary-fixed: #e4e2e1;
+    --on-secondary-fixed: #1b1c1c;
+    --secondary-fixed-dim: #c8c6c5;
+    --on-secondary-fixed-variant: #474746;
+    --tertiary-fixed: #d7e2ff;
+    --on-tertiary-fixed: #001a40;
+    --tertiary-fixed-dim: #acc7ff;
+    --on-tertiary-fixed-variant: #004491;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.emphasized-decelerate {
+    transition-timing-function: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+}
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background);
+}
+h1, h2, h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.signature-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+}
+.dark .signature-gradient {
+    background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+}
+</style>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "error-container": "var(--error-container)",
+        "on-secondary-container": "var(--on-secondary-container)",
+        "surface-variant": "var(--surface-variant)",
+        "on-background": "var(--on-background)",
+        "on-error": "var(--on-error)",
+        "surface-dim": "var(--surface-dim)",
+        "on-tertiary-fixed": "var(--on-tertiary-fixed)",
+        "primary": "var(--primary)",
+        "on-primary-container": "var(--on-primary-container)",
+        "on-error-container": "var(--on-error-container)",
+        "on-primary-fixed": "var(--on-primary-fixed)",
+        "on-secondary-fixed": "var(--on-secondary-fixed)",
+        "primary-fixed": "var(--primary-fixed)",
+        "surface-container-low": "var(--surface-container-low)",
+        "secondary": "var(--secondary)",
+        "tertiary": "var(--tertiary)",
+        "inverse-primary": "var(--inverse-primary)",
+        "on-secondary": "var(--on-secondary)",
+        "secondary-container": "var(--secondary-container)",
+        "primary-container": "var(--primary-container)",
+        "on-primary-fixed-variant": "var(--on-primary-fixed-variant)",
+        "tertiary-fixed-dim": "var(--tertiary-fixed-dim)",
+        "on-surface": "var(--on-surface)",
+        "on-tertiary-fixed-variant": "var(--on-tertiary-fixed-variant)",
+        "inverse-on-surface": "var(--inverse-on-surface)",
+        "inverse-surface": "var(--inverse-surface)",
+        "surface-container": "var(--surface-container)",
+        "on-tertiary": "var(--on-tertiary)",
+        "surface": "var(--surface)",
+        "tertiary-fixed": "var(--tertiary-fixed)",
+        "background": "var(--background)",
+        "on-primary": "var(--on-primary)",
+        "surface-container-lowest": "var(--surface-container-lowest)",
+        "surface-container-high": "var(--surface-container-high)",
+        "surface-bright": "var(--surface-bright)",
+        "tertiary-container": "var(--tertiary-container)",
+        "primary-fixed-dim": "var(--primary-fixed-dim)",
+        "on-tertiary-container": "var(--on-tertiary-container)",
+        "outline": "var(--outline)",
+        "error": "var(--error)",
+        "outline-variant": "var(--outline-variant)",
+        "secondary-fixed": "var(--secondary-fixed)",
+        "surface-tint": "var(--surface-tint)",
+        "on-surface-variant": "var(--on-surface-variant)",
+        "surface-container-highest": "var(--surface-container-highest)",
+        "secondary-fixed-dim": "var(--secondary-fixed-dim)",
+        "on-secondary-fixed-variant": "var(--on-secondary-fixed-variant)"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "fontFamily": {
+        "headline": ["Plus Jakarta Sans"],
+        "body": ["Inter"],
+        "label": ["Inter"]
+      }
+    },
+  }
+}
+</script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopNavBar -->
+<header class="w-full sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_12px_32px_rgba(26,28,28,0.06)] flex justify-between items-center px-6 py-4">
+    <div class="flex items-center gap-4">
+        <a href="/" class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 ease-emphasized">
+            <span class="material-symbols-outlined text-on-surface">arrow_back</span>
+        </a>
+        <h1 class="text-2xl font-bold text-red-700 dark:text-red-500 font-['Plus_Jakarta_Sans'] tracking-tight">Настройки</h1>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="save-btn" class="signature-gradient text-on-primary px-6 py-2 rounded-full font-headline font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50">
+            Сохранить
+        </button>
+        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" title="Закрыть приложение">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 py-8">
+    <!-- Hero Branding -->
+    <div class="mb-10 text-center">
+        <div class="inline-block p-4 rounded-full bg-primary-container/10 mb-4">
+            <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">settings</span>
+        </div>
+        <p class="text-on-surface-variant max-w-sm mx-auto">Настройте приложение под себя. Preferences сохраняются автоматически.</p>
+    </div>
+
+    <!-- Settings Group 1: Downloads -->
+    <div class="mb-8">
+        <h2 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant px-4 mb-4">Настройки загрузки</h2>
+        <div class="space-y-2">
+            <!-- Quality Setting Item -->
+            <div class="group flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary-container/10 rounded-xl group-hover:bg-primary-container/20 transition-colors">
+                        <span class="material-symbols-outlined text-primary">hd</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Качество по умолчанию</p>
+                        <p class="text-sm text-on-surface-variant">Приоритет высокого качества видео</p>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="quality-dropdown-btn" class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full hover:bg-surface-container-highest transition-colors">
+                        <span id="quality-selected" class="text-sm font-bold text-on-surface">1080p</span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div id="quality-menu" class="absolute right-0 top-full mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 min-w-[160px] hidden">
+                        <div class="py-2">
+                            <button class="quality-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="best">
+                                <span>Лучшее</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="quality-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="1080p">
+                                <span>1080p</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="quality-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="720p">
+                                <span>720p</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="quality-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="480p">
+                                <span>480p</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="quality-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="360p">
+                                <span>360p</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Format Setting Item -->
+            <div class="group flex items-center justify-between p-4 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary-container/10 rounded-xl group-hover:bg-primary-container/20 transition-colors">
+                        <span class="material-symbols-outlined text-primary">movie</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Формат загрузки</p>
+                        <p class="text-sm text-on-surface-variant">Предпочтительный формат файлов</p>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="format-dropdown-btn" class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full hover:bg-surface-container-highest transition-colors">
+                        <span id="format-selected" class="text-sm font-bold text-on-surface">MP4</span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div id="format-menu" class="absolute right-0 top-full mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 min-w-[160px] hidden">
+                        <div class="py-2">
+                            <button class="format-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="mp4">
+                                <span>MP4</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="format-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="webm">
+                                <span>WEBM</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="format-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="mp3">
+                                <span>MP3 (аудио)</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Location Setting Item -->
+            <div class="group flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary-container/10 rounded-xl group-hover:bg-primary-container/20 transition-colors">
+                        <span class="material-symbols-outlined text-primary">folder_open</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Путь сохранения</p>
+                        <p id="save-location-text" class="text-sm text-on-surface-variant truncate max-w-[200px] md:max-w-md">/Videos/StreamVault</p>
+                    </div>
+                </div>
+                <button id="edit-location-btn" class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Group: Appearance -->
+    <div class="mb-12">
+        <h2 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant px-4 mb-4">Внешний вид</h2>
+        <div class="space-y-2">
+            <!-- Dark Theme Toggle -->
+            <div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-surface-container-highest rounded-xl">
+                        <span class="material-symbols-outlined text-secondary">dark_mode</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Тёмная тема</p>
+                        <p class="text-sm text-on-surface-variant">Снижает нагрузку на глаза ночью</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="dark-theme-toggle" type="checkbox" class="sr-only peer">
+                    <div class="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Group: Network & System -->
+    <div class="mb-12">
+        <h2 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant px-4 mb-4">Сеть и система</h2>
+        <div class="space-y-2">
+            <!-- WiFi Only Toggle -->
+            <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-surface-container-highest rounded-xl">
+                        <span class="material-symbols-outlined text-secondary">wifi</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Загрузка только по Wi-Fi</p>
+                        <p class="text-sm text-on-surface-variant">Избегать использования мобильных данных</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="wifi-only-toggle" type="checkbox" class="sr-only peer">
+                    <div class="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+
+            <!-- Auto-clear Queue -->
+            <div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-surface-container-highest rounded-xl">
+                        <span class="material-symbols-outlined text-secondary">auto_delete</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Авто-очистка очереди</p>
+                        <p class="text-sm text-on-surface-variant">Удалять задачи после успешной загрузки</p>
+                    </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="auto-clear-toggle" type="checkbox" class="sr-only peer">
+                    <div class="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Usage Card -->
+    <div class="grid grid-cols-1 gap-4">
+        <div class="bg-surface-container-low p-6 rounded-3xl relative overflow-hidden group">
+            <div class="relative z-10">
+                <h3 class="text-xl font-bold mb-2">Дисковое пространство</h3>
+                <div class="flex flex-col mb-4">
+                    <span id="storage-used" class="text-3xl font-extrabold text-primary">0 B свободно</span>
+                    <span id="storage-folder-info" class="text-sm font-medium text-on-surface-variant opacity-70 mt-1">Папка загрузок: 0 B</span>
+                </div>
+                <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="storage-bar" class="w-0 h-full bg-primary rounded-full transition-all duration-500"></div>
+                </div>
+            </div>
+            <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <span class="material-symbols-outlined text-9xl">storage</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="mt-16 text-center space-y-2 opacity-50">
+        <p class="text-xs font-bold uppercase tracking-widest">StreamVault v1.0.0</p>
+        <p class="text-xs">Создано для любителей видео</p>
+    </div>
+</main>
+
+<!-- Dialog for changing save location -->
+<div id="location-dialog" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-surface-container-lowest p-6 rounded-2xl max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold text-on-surface mb-4">Выберите путь сохранения</h3>
+        <input id="location-input" type="text" class="w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\Users\Name\Videos"/>
+        <div class="flex justify-end gap-3 mt-4">
+            <button id="cancel-location" class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">Отмена</button>
+            <button id="save-location" class="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary/90 transition-colors">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.signature-gradient {
+    background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+}
+</style>
+
+<script>
+const API_URL = window.location.origin;
+
+let currentSettings = null;
+let qualityValue = '1080p';
+let formatValue = 'mp4';
+
+// Dropdown функции
+function setupDropdown(dropdownBtnId, menuId, optionClass, selectedDisplayId, onSelect) {
+    const dropdownBtn = document.getElementById(dropdownBtnId);
+    const menu = document.getElementById(menuId);
+    const selectedDisplay = document.getElementById(selectedDisplayId);
+    const options = menu.querySelectorAll(`.${optionClass}`);
+    
+    if (!dropdownBtn || !menu || !selectedDisplay) return;
+    
+    // Открытие/закрытие меню
+    dropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = menu.classList.contains('hidden');
+        
+        // Закрыть все другие меню
+        document.querySelectorAll('[id$="-menu"]').forEach(m => {
+            if (m !== menu) {
+                m.classList.add('hidden');
+            }
+        });
+        
+        if (isHidden) {
+            menu.classList.remove('hidden');
+        } else {
+            menu.classList.add('hidden');
+        }
+    });
+    
+    // Выбор опции
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const text = option.querySelector('span:first-child').textContent;
+            
+            // Обновить отображение
+            selectedDisplay.textContent = text;
+            
+            // Обновить check иконки
+            options.forEach(opt => {
+                const check = opt.querySelector('.material-symbols-outlined');
+                if (check) check.classList.add('hidden');
+            });
+            const check = option.querySelector('.material-symbols-outlined');
+            if (check) check.classList.remove('hidden');
+            
+            // Закрыть меню
+            menu.classList.add('hidden');
+            
+            // Вызвать callback
+            if (onSelect) onSelect(value);
+        });
+    });
+}
+
+// Закрыть все меню при клике вне
+document.addEventListener('click', () => {
+    document.querySelectorAll('[id$="-menu"]').forEach(menu => {
+        menu.classList.add('hidden');
+    });
+});
+
+// Загрузка настроек
+async function loadSettings() {
+    try {
+        const response = await fetch(`${API_URL}/api/settings`);
+        currentSettings = await response.json();
+        applySettings(currentSettings);
+    } catch (err) {
+        console.error('Ошибка загрузки настроек:', err);
+    }
+}
+
+function applySettings(settings) {
+    qualityValue = settings.default_quality;
+    formatValue = settings.download_format;
+    
+    // Обновить отображение dropdown
+    const qualityMap = {
+        'best': 'Лучшее',
+        '1080p': '1080p',
+        '720p': '720p',
+        '480p': '480p',
+        '360p': '360p'
+    };
+    
+    const formatMap = {
+        'mp4': 'MP4',
+        'webm': 'WEBM',
+        'mp3': 'MP3 (аудио)'
+    };
+    
+    document.getElementById('quality-selected').textContent = qualityMap[qualityValue] || qualityValue;
+    document.getElementById('format-selected').textContent = formatMap[formatValue] || formatValue;
+    
+    // Обновить check marks
+    document.querySelectorAll('.quality-option').forEach(opt => {
+        const check = opt.querySelector('.material-symbols-outlined');
+        if (opt.dataset.value === qualityValue && check) {
+            check.classList.remove('hidden');
+        } else if (check) {
+            check.classList.add('hidden');
+        }
+    });
+    
+    document.querySelectorAll('.format-option').forEach(opt => {
+        const check = opt.querySelector('.material-symbols-outlined');
+        if (opt.dataset.value === formatValue && check) {
+            check.classList.remove('hidden');
+        } else if (check) {
+            check.classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('save-location-text').textContent = settings.save_location;
+    document.getElementById('dark-theme-toggle').checked = settings.dark_theme;
+    document.getElementById('wifi-only-toggle').checked = settings.wifi_only;
+    document.getElementById('auto-clear-toggle').checked = settings.auto_clear_queue;
+
+    // Применяем тёмную тему
+    if (settings.dark_theme) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+    } else {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+    }
+}
+
+// Сохранение настроек
+document.getElementById('save-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Сохранение...';
+
+    const newSettings = {
+        default_quality: qualityValue,
+        download_format: formatValue,
+        save_location: currentSettings.save_location,
+        dark_theme: document.getElementById('dark-theme-toggle').checked,
+        wifi_only: document.getElementById('wifi-only-toggle').checked,
+        auto_clear_queue: document.getElementById('auto-clear-toggle').checked
+    };
+
+    try {
+        await fetch(`${API_URL}/api/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings: newSettings })
+        });
+        currentSettings = newSettings;
+        applySettings(newSettings);
+    } catch (err) {
+        console.error('Ошибка сохранения:', err);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сохранить';
+    }
+});
+
+// Изменение пути сохранения
+document.getElementById('edit-location-btn').addEventListener('click', () => {
+    document.getElementById('location-input').value = currentSettings.save_location;
+    document.getElementById('location-dialog').classList.remove('hidden');
+    document.getElementById('location-dialog').classList.add('flex');
+});
+
+document.getElementById('cancel-location').addEventListener('click', () => {
+    document.getElementById('location-dialog').classList.add('hidden');
+    document.getElementById('location-dialog').classList.remove('flex');
+});
+
+document.getElementById('save-location').addEventListener('click', async () => {
+    const newLocation = document.getElementById('location-input').value.trim();
+    if (newLocation) {
+        currentSettings.save_location = newLocation;
+        document.getElementById('save-location-text').textContent = newLocation;
+    }
+    document.getElementById('location-dialog').classList.add('hidden');
+    document.getElementById('location-dialog').classList.remove('flex');
+});
+
+// Инициализация dropdown
+setupDropdown('quality-dropdown-btn', 'quality-menu', 'quality-option', 'quality-selected', (value) => {
+    qualityValue = value;
+});
+
+setupDropdown('format-dropdown-btn', 'format-menu', 'format-option', 'format-selected', (value) => {
+    formatValue = value;
+});
+
+loadSettings();
+
+// Загрузка реальных данных хранилища
+async function updateStorageUsage() {
+    try {
+        const response = await fetch(`${API_URL}/api/storage`);
+        const storage = await response.json();
+        
+        document.getElementById('storage-used').textContent = `${storage.disk_free_formatted} свободно`;
+        document.getElementById('storage-folder-info').textContent = `Папка загрузок: ${storage.folder_size_formatted} (${storage.file_count} файлов)`;
+        
+        // Используем реальный процент занятого места на диске
+        document.getElementById('storage-bar').style.width = `${storage.disk_used_percent}%`;
+    } catch (err) {
+        console.error('Ошибка загрузки данных хранилища:', err);
+        // Fallback на случай ошибки
+        document.getElementById('storage-used').textContent = '— свободно';
+        document.getElementById('storage-bar').style.width = '0%';
+    }
+}
+
+updateStorageUsage();
+
+// Закрытие приложения
+document.getElementById('close-app')?.addEventListener('click', () => {
+    if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.close();
+    }
+});
+</script>
+</body>
+</html>
