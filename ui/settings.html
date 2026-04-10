@@ -420,6 +420,22 @@ tailwind.config = {
                     <div class="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
             </div>
+
+            <!-- Cookies File Path -->
+            <div class="group flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-primary-container/10 rounded-xl group-hover:bg-primary-container/20 transition-colors">
+                        <span class="material-symbols-outlined text-primary">cookie</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Файл Cookies</p>
+                        <p id="cookies-path-text" class="text-sm text-on-surface-variant truncate max-w-[200px] md:max-w-md">Не указан (для 18+ и приватных видео)</p>
+                    </div>
+                </div>
+                <button id="edit-cookies-btn" class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">edit</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -457,6 +473,22 @@ tailwind.config = {
         <div class="flex justify-end gap-3 mt-4">
             <button id="cancel-location" class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">Отмена</button>
             <button id="save-location" class="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary/90 transition-colors">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Dialog for changing cookies path -->
+<div id="cookies-dialog" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-surface-container-lowest p-6 rounded-2xl max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">cookie</span>
+            Путь к Cookies.txt
+        </h3>
+        <p class="text-sm text-on-surface-variant mb-4">Укажите полный путь к файлу cookies в формате Netscape. Это позволит скачивать видео 18+.</p>
+        <input id="cookies-input" type="text" class="w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\path\to\cookies.txt"/>
+        <div class="flex justify-end gap-3 mt-4">
+            <button id="cancel-cookies" class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">Отмена</button>
+            <button id="save-cookies" class="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary/90 transition-colors">Применить</button>
         </div>
     </div>
 </div>
@@ -592,6 +624,7 @@ function applySettings(settings) {
     document.getElementById('wifi-only-toggle').checked = settings.wifi_only;
     document.getElementById('auto-clear-toggle').checked = settings.auto_clear_queue;
     document.getElementById('random-filename-toggle').checked = settings.random_filename;
+    document.getElementById('cookies-path-text').textContent = settings.cookies_path || "Не указан (для 18+ и приватных видео)";
 
     // Применяем тёмную тему
     if (settings.dark_theme) {
@@ -616,7 +649,8 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         dark_theme: document.getElementById('dark-theme-toggle').checked,
         wifi_only: document.getElementById('wifi-only-toggle').checked,
         auto_clear_queue: document.getElementById('auto-clear-toggle').checked,
-        random_filename: document.getElementById('random-filename-toggle').checked
+        random_filename: document.getElementById('random-filename-toggle').checked,
+        cookies_path: currentSettings.cookies_path
     };
 
     try {
@@ -648,8 +682,10 @@ document.getElementById('cancel-location').addEventListener('click', () => {
 });
 
 document.getElementById('save-location').addEventListener('click', async () => {
-    const newLocation = document.getElementById('location-input').value.trim();
+    let newLocation = document.getElementById('location-input').value.trim();
     if (newLocation) {
+        // Убираем кавычки, если пользователь их вставил
+        newLocation = newLocation.replace(/^["']|["']$/g, '');
         currentSettings.save_location = newLocation;
         document.getElementById('save-location-text').textContent = newLocation;
     }
@@ -658,6 +694,28 @@ document.getElementById('save-location').addEventListener('click', async () => {
 });
 
 // Инициализация dropdown
+// Изменение пути куки
+document.getElementById('edit-cookies-btn').addEventListener('click', () => {
+    document.getElementById('cookies-input').value = currentSettings.cookies_path || '';
+    document.getElementById('cookies-dialog').classList.remove('hidden');
+    document.getElementById('cookies-dialog').classList.add('flex');
+});
+
+document.getElementById('cancel-cookies').addEventListener('click', () => {
+    document.getElementById('cookies-dialog').classList.add('hidden');
+    document.getElementById('cookies-dialog').classList.remove('flex');
+});
+
+document.getElementById('save-cookies').addEventListener('click', () => {
+    let newPath = document.getElementById('cookies-input').value.trim();
+    // Убираем кавычки
+    newPath = newPath.replace(/^["']|["']$/g, '');
+    currentSettings.cookies_path = newPath;
+    document.getElementById('cookies-path-text').textContent = newPath || "Не указан (для 18+ и приватных видео)";
+    document.getElementById('cookies-dialog').classList.add('hidden');
+    document.getElementById('cookies-dialog').classList.remove('flex');
+});
+
 setupDropdown('quality-dropdown-btn', 'quality-menu', 'quality-option', 'quality-selected', (value) => {
     qualityValue = value;
 });

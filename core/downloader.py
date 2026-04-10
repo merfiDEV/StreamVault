@@ -73,11 +73,20 @@ class DownloadManager:
             return {"error": "yt-dlp.exe not found"}
 
         try:
-            proc = await asyncio.create_subprocess_exec(
+            settings = load_settings()
+            cmd = [
                 str(self.ytdlp_path),
                 "-j",
                 "--flat-playlist",
-                url,
+            ]
+            
+            if settings.cookies_path and os.path.exists(settings.cookies_path):
+                cmd.extend(["--cookies", settings.cookies_path])
+                
+            cmd.append(url)
+
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -165,15 +174,24 @@ class DownloadManager:
         if settings.download_format.lower() == "mp3":
             cmd.extend(["-x", "--audio-format", "mp3"])
 
+        if settings.cookies_path and os.path.exists(settings.cookies_path):
+            cmd.extend(["--cookies", settings.cookies_path])
+
         cmd.append(task.url)
 
         try:
             # Получаем заголовок видео через JSON-вывод (всегда UTF-8)
-            title_proc = await asyncio.create_subprocess_exec(
+            title_cmd = [
                 str(self.ytdlp_path),
                 "-j",  # JSON output
                 "--no-playlist",
-                task.url,
+            ]
+            if settings.cookies_path and os.path.exists(settings.cookies_path):
+                title_cmd.extend(["--cookies", settings.cookies_path])
+            title_cmd.append(task.url)
+
+            title_proc = await asyncio.create_subprocess_exec(
+                *title_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )

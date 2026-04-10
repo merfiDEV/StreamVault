@@ -15,6 +15,7 @@ class Settings(BaseModel):
     wifi_only: bool = False
     auto_clear_queue: bool = False
     random_filename: bool = False
+    cookies_path: str = ""
 
 
 CONFIG_PATH = Path(__file__).parent.parent / "config.json"
