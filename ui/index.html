@@ -334,21 +334,21 @@ function renderDownloads(tasks) {
                 <div class="flex gap-2">
                     ${showActions ? `
                         ${task.status === 'paused' ? `
-                        <button onclick="resumeTask('${task.id}')" class="text-primary hover:bg-primary/10 p-1 rounded-full transition-colors">
+                        <button onclick="resumeTask('${task.id}')" class="text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="Продолжить">
                             <span class="material-symbols-outlined text-[20px]">play_arrow</span>
                         </button>
                         ` : ''}
                         ${task.status === 'downloading' ? `
-                        <button onclick="pauseTask('${task.id}')" class="text-on-secondary-container hover:text-primary p-1 rounded-full transition-colors">
+                        <button onclick="pauseTask('${task.id}')" class="text-on-secondary-container hover:text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="Приостановить">
                             <span class="material-symbols-outlined text-[20px]">pause</span>
                         </button>
                         ` : ''}
-                        <button onclick="cancelTask('${task.id}')" class="text-on-secondary-container hover:text-error transition-colors p-1">
+                        <button onclick="cancelTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="Отменить">
                             <span class="material-symbols-outlined text-[20px]">close</span>
                         </button>
                     ` : `
-                        <button onclick="removeTask('${task.id}')" class="text-on-secondary-container hover:text-error transition-colors p-1">
-                            <span class="material-symbols-outlined text-[20px]">close</span>
+                        <button onclick="removeTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="Удалить">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
                         </button>
                     `}
                 </div>
@@ -414,19 +414,19 @@ function escapeHtml(text) {
 }
 
 // Действия с загрузками
-async function pauseTask(id) {
+window.pauseTask = async function(id) {
     await fetch(`${API_URL}/api/download/${id}/pause`, { method: 'POST' });
 }
 
-async function resumeTask(id) {
+window.resumeTask = async function(id) {
     await fetch(`${API_URL}/api/download/${id}/resume`, { method: 'POST' });
 }
 
-async function cancelTask(id) {
+window.cancelTask = async function(id) {
     await fetch(`${API_URL}/api/download/${id}/cancel`, { method: 'POST' });
 }
 
-async function removeTask(id) {
+window.removeTask = async function(id) {
     await fetch(`${API_URL}/api/download/${id}`, { method: 'DELETE' });
 }
 
