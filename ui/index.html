@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html class="light" lang="ru">
 <head>
+<script>
+    (function() {
+        const stored = localStorage.getItem('dark_theme');
+        if (stored === 'true') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+        } else if (stored === 'false') {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+        }
+    })();
+</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>StreamVault</title>
