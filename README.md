@@ -48,7 +48,7 @@
   </tr>
   <tr>
     <td align="center" colspan="2">
-      <img src=".assets/история.jpg" alt="История скачиваний" width="100%"/>
+      <img src=".assets/история.jpg" alt="История скачиваний" width="50%"/>
       <sub><b>История скачиваний</b></sub>
     </td>
   </tr>
