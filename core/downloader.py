@@ -41,6 +41,7 @@ class DownloadTask:
         self.format_warning = ""
         self.thumbnail = ""
         self.resumed = False
+        self.removed = False
         self.process: Optional[asyncio.subprocess.Process] = None
 
     def to_dict(self) -> dict:
@@ -197,6 +198,9 @@ class DownloadManager:
 
     async def _run_download(self, task: DownloadTask, settings: Settings) -> None:
         """Выполнить загрузку через yt-dlp."""
+        def was_removed() -> bool:
+            return task.removed or task.id not in self.tasks
+
         if not self.ytdlp_path.exists():
             task.status = DownloadStatus.ERROR
             task.error_message = "yt-dlp.exe not found"
@@ -340,6 +344,9 @@ class DownloadManager:
 
             await task.process.wait()
 
+            if was_removed():
+                return
+
             if task.status == DownloadStatus.PAUSED:
                 return
 
@@ -347,6 +354,8 @@ class DownloadManager:
                 task.status = DownloadStatus.PROCESSING
                 task.progress = 100.0
                 await asyncio.sleep(0.5)
+                if was_removed():
+                    return
                 task.status = DownloadStatus.COMPLETED
                 task.progress = 100.0
 
@@ -370,6 +379,8 @@ class DownloadManager:
                     await asyncio.sleep(2)
                     self.tasks.pop(task.id, None)
             else:
+                if was_removed():
+                    return
                 stderr_output = ""
                 if task.process.stderr:
                     stderr_output = await task.process.stderr.read()
@@ -393,6 +404,8 @@ class DownloadManager:
                     pass
 
         except Exception as e:
+            if was_removed():
+                return
             task.status = DownloadStatus.ERROR
             task.error_message = str(e)[:200]
             
@@ -486,6 +499,7 @@ class DownloadManager:
         """Удалить задачу из очереди."""
         if task_id in self.tasks:
             task = self.tasks[task_id]
+            task.removed = True
             if task.status in (DownloadStatus.DOWNLOADING, DownloadStatus.PAUSED) and task.process:
                 if task.process.returncode is None:
                     self._manage_process_tree(task.process.pid, "kill")
