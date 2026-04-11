@@ -18,3 +18,7 @@ cookies.txt
 *.mp3
 *.m4a
 history.db
+
+# Personal settings and actions
+config.json
+.github/
