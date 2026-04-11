@@ -421,20 +421,87 @@ tailwind.config = {
                 </label>
             </div>
 
-            <!-- Cookies File Path -->
-            <div class="group flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
-                <div class="flex items-center gap-4">
-                    <div class="p-3 bg-primary-container/10 rounded-xl group-hover:bg-primary-container/20 transition-colors">
+            <!-- Cookie Source Setting -->
+            <div class="p-4 bg-surface-container-lowest rounded-xl">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="p-3 bg-primary-container/10 rounded-xl">
                         <span class="material-symbols-outlined text-primary">cookie</span>
                     </div>
                     <div>
-                        <p class="font-semibold text-on-surface">Файл Cookies</p>
-                        <p id="cookies-path-text" class="text-sm text-on-surface-variant truncate max-w-[200px] md:max-w-md">Не указан (для 18+ и приватных видео)</p>
+                        <p class="font-semibold text-on-surface">Источник Cookies</p>
+                        <p class="text-sm text-on-surface-variant">Требуется для 18+ и приватных видео</p>
+                    </div>
+                </div>
+                <!-- 3-mode toggle -->
+                <div class="flex bg-surface-container-high rounded-full p-1 w-full">
+                    <button id="source-btn-none" class="source-toggle-btn flex-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300" data-source="none">Отключено</button>
+                    <button id="source-btn-file" class="source-toggle-btn flex-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300" data-source="file">Файл</button>
+                    <button id="source-btn-browser" class="source-toggle-btn flex-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300" data-source="browser">Браузер</button>
+                </div>
+            </div>
+
+            <!-- Cookies File Path -->
+            <div id="cookies-file-section" class="group hidden items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-surface-container-highest rounded-xl group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-secondary">description</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Файл Cookies.txt</p>
+                        <p id="cookies-path-text" class="text-sm text-on-surface-variant truncate max-w-[200px] md:max-w-md">Не указан</p>
                     </div>
                 </div>
                 <button id="edit-cookies-btn" class="p-2 text-on-surface-variant hover:text-primary transition-colors">
                     <span class="material-symbols-outlined">edit</span>
                 </button>
+            </div>
+
+            <!-- Browser Selection -->
+            <div id="cookies-browser-section" class="group hidden items-center justify-between p-4 bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors duration-300 ease-emphasized cursor-pointer">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-surface-container-highest rounded-xl group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-secondary">language</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-on-surface">Браузер</p>
+                        <p class="text-sm text-on-surface-variant">yt-dlp извлечёт куки напрямую из браузера</p>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="browser-dropdown-btn" class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full hover:bg-surface-container-highest transition-colors">
+                        <span id="browser-selected" class="text-sm font-bold text-on-surface">Chrome</span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div id="browser-menu" class="absolute right-0 top-full mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 min-w-[160px] hidden">
+                        <div class="py-2">
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="chrome">
+                                <span>Chrome</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="firefox">
+                                <span>Firefox</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="edge">
+                                <span>Edge</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="opera">
+                                <span>Opera</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="brave">
+                                <span>Brave</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                            <button class="browser-option w-full px-4 py-2 text-left text-sm hover:bg-primary/10 transition-colors flex items-center justify-between" data-value="vivaldi">
+                                <span>Vivaldi</span>
+                                <span class="material-symbols-outlined text-primary text-[18px] hidden">check</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -482,10 +549,14 @@ tailwind.config = {
     <div class="bg-surface-container-lowest p-6 rounded-2xl max-w-md w-full mx-4">
         <h3 class="text-lg font-bold text-on-surface mb-2 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">cookie</span>
-            Путь к Cookies.txt
+            Файл cookies.txt
         </h3>
-        <p class="text-sm text-on-surface-variant mb-4">Укажите полный путь к файлу cookies в формате Netscape. Это позволит скачивать видео 18+.</p>
-        <input id="cookies-input" type="text" class="w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\path\to\cookies.txt"/>
+        <p class="text-sm text-on-surface-variant mb-1">Укажите полный путь к файлу в <strong>формате Netscape</strong> (расширение .txt).</p>
+        <div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-4">
+            <span class="material-symbols-outlined text-amber-500 text-base mt-0.5">warning</span>
+            <p class="text-xs text-amber-600 dark:text-amber-400">Файл базы данных Chrome (<code>Network\Cookies</code>) <strong>не подходит</strong>. Экспортируйте куки через расширение «Get cookies.txt LOCALLY».</p>
+        </div>
+        <input id="cookies-input" type="text" class="w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\Users\Name\cookies.txt"/>
         <div class="flex justify-end gap-3 mt-4">
             <button id="cancel-cookies" class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors">Отмена</button>
             <button id="save-cookies" class="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary/90 transition-colors">Применить</button>
@@ -505,6 +576,8 @@ const API_URL = window.location.origin;
 let currentSettings = null;
 let qualityValue = '1080p';
 let formatValue = 'mp4';
+let cookieSource = 'none';  // 'none' | 'file' | 'browser'
+let browserValue = 'chrome';
 
 // Dropdown функции
 function setupDropdown(dropdownBtnId, menuId, optionClass, selectedDisplayId, onSelect) {
@@ -624,7 +697,39 @@ function applySettings(settings) {
     document.getElementById('wifi-only-toggle').checked = settings.wifi_only;
     document.getElementById('auto-clear-toggle').checked = settings.auto_clear_queue;
     document.getElementById('random-filename-toggle').checked = settings.random_filename;
-    document.getElementById('cookies-path-text').textContent = settings.cookies_path || "Не указан (для 18+ и приватных видео)";
+    document.getElementById('cookies-path-text').textContent = settings.cookies_path || "Не указан";
+    
+    // Cookies Source: определяем режим
+    if (settings.use_browser_cookies) {
+        cookieSource = 'browser';
+    } else if (settings.cookies_path && settings.cookies_path.trim() !== '') {
+        cookieSource = 'file';
+    } else {
+        cookieSource = 'none';
+    }
+    updateCookieUI();
+
+    // Browser selection
+    browserValue = settings.selected_browser || 'chrome';
+    const browserMap = {
+        'chrome': 'Chrome',
+        'firefox': 'Firefox',
+        'edge': 'Edge',
+        'opera': 'Opera',
+        'brave': 'Brave',
+        'vivaldi': 'Vivaldi'
+    };
+    document.getElementById('browser-selected').textContent = browserMap[browserValue] || browserValue;
+    
+    // Update check marks for browser dropdown
+    document.querySelectorAll('.browser-option').forEach(opt => {
+        const check = opt.querySelector('.material-symbols-outlined');
+        if (opt.dataset.value === browserValue && check) {
+            check.classList.remove('hidden');
+        } else if (check) {
+            check.classList.add('hidden');
+        }
+    });
 
     // Применяем тёмную тему
     if (settings.dark_theme) {
@@ -650,7 +755,9 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         wifi_only: document.getElementById('wifi-only-toggle').checked,
         auto_clear_queue: document.getElementById('auto-clear-toggle').checked,
         random_filename: document.getElementById('random-filename-toggle').checked,
-        cookies_path: currentSettings.cookies_path
+        cookies_path: cookieSource === 'none' ? '' : currentSettings.cookies_path,
+        use_browser_cookies: cookieSource === 'browser',
+        selected_browser: browserValue
     };
 
     try {
@@ -722,6 +829,62 @@ setupDropdown('quality-dropdown-btn', 'quality-menu', 'quality-option', 'quality
 
 setupDropdown('format-dropdown-btn', 'format-menu', 'format-option', 'format-selected', (value) => {
     formatValue = value;
+});
+
+setupDropdown('browser-dropdown-btn', 'browser-menu', 'browser-option', 'browser-selected', (value) => {
+    browserValue = value;
+});
+
+// Toggle cookie source (3 режима: none / file / browser)
+function updateCookieUI() {
+    const fileSection = document.getElementById('cookies-file-section');
+    const browserSection = document.getElementById('cookies-browser-section');
+    const btnNone = document.getElementById('source-btn-none');
+    const btnFile = document.getElementById('source-btn-file');
+    const btnBrowser = document.getElementById('source-btn-browser');
+
+    // Сброс всех кнопок
+    [btnNone, btnFile, btnBrowser].forEach(b => {
+        if (!b) return;
+        b.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        b.classList.add('text-on-surface-variant');
+    });
+
+    // Скрыть все секции
+    [fileSection, browserSection].forEach(s => {
+        if (!s) return;
+        s.classList.add('hidden');
+        s.classList.remove('flex');
+    });
+
+    // Активировать нужный режим
+    if (cookieSource === 'file') {
+        btnFile.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnFile.classList.remove('text-on-surface-variant');
+        fileSection.classList.remove('hidden');
+        fileSection.classList.add('flex');
+    } else if (cookieSource === 'browser') {
+        btnBrowser.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnBrowser.classList.remove('text-on-surface-variant');
+        browserSection.classList.remove('hidden');
+        browserSection.classList.add('flex');
+    } else {
+        // none
+        btnNone.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btnNone.classList.remove('text-on-surface-variant');
+    }
+}
+
+document.querySelectorAll('.source-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        cookieSource = btn.dataset.source;
+        // При переключении на «Отключено» — очищаем путь к файлу
+        if (cookieSource === 'none' && currentSettings) {
+            currentSettings.cookies_path = '';
+            document.getElementById('cookies-path-text').textContent = 'Не указан';
+        }
+        updateCookieUI();
+    });
 });
 
 loadSettings();

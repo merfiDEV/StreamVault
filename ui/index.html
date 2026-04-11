@@ -362,17 +362,17 @@ downloadBtn.addEventListener('click', async () => {
 
         const data = await response.json();
 
-        if (data.entries && data.entries.length > 1) {
-            // Это плейлист — открываем диалог
+        if (data.entries && data.entries.length > 0) {
+            // Это плейлист (или список видео) — открываем диалог
             currentPlaylistUrl = url;
             playlistEntries = data.entries;
             selectedIndices = new Set();
             showPlaylistDialog(data);
         } else if (data.error) {
-            // Ошибка или не плейлист — скачиваем как обычное видео
-            await startDownload(url);
+            // Ошибка — показываем сообщение и не продолжаем
+            showToast(data.error, 'Ошибка плейлиста');
         } else {
-            // Не плейлист — скачиваем как обычное видео
+            // Не плейлист или нет входов — скачиваем как обычное видео
             await startDownload(url);
         }
     } catch (err) {

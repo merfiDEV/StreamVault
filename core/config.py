@@ -16,6 +16,8 @@ class Settings(BaseModel):
     auto_clear_queue: bool = False
     random_filename: bool = False
     cookies_path: str = ""
+    use_browser_cookies: bool = False
+    selected_browser: str = "chrome"
 
 
 CONFIG_PATH = Path(__file__).parent.parent / "config.json"

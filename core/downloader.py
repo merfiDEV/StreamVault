@@ -67,6 +67,35 @@ class DownloadManager:
         self.tasks: dict[str, DownloadTask] = {}
         self.ytdlp_path = Path(__file__).parent.parent / "yt-dlp.exe"
 
+    def _get_cookie_args(self, settings: Settings) -> list[str]:
+        """Получить аргументы для куки на основе настроек."""
+        # Режим 1: Куки из браузера
+        if settings.use_browser_cookies and settings.selected_browser:
+            return ["--cookies-from-browser", settings.selected_browser]
+        # Режим 2: Куки из файла .txt (Netscape формат)
+        elif settings.cookies_path:
+            path = settings.cookies_path.strip()
+            if not path:
+                return []
+            if not os.path.exists(path):
+                return []  # Файл не существует — игнорируем без ошибки
+            # Проверяем что это не SQLite база Chrome (бинарный файл)
+            try:
+                with open(path, 'rb') as f:
+                    header = f.read(16)
+                # SQLite файлы начинаются с 'SQLite format 3'
+                if header.startswith(b'SQLite format 3'):
+                    return []  # Это база Chrome — игнорируем
+                # Проверяем что файл текстовый (Netscape cookies.txt)
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    first_line = f.readline()
+                if '# Netscape HTTP Cookie File' in first_line or '# HTTP Cookie File' in first_line or first_line.strip() == '' or '\t' in first_line:
+                    return ["--cookies", path]
+                return ["--cookies", path]  # Передаём как есть, yt-dlp сам разберётся
+            except (OSError, PermissionError):
+                return []  # Нет доступа — игнорируем
+        return []
+
     async def get_playlist_info(self, url: str) -> dict:
         """Получить информацию о плейлисте."""
         if not self.ytdlp_path.exists():
@@ -80,8 +109,7 @@ class DownloadManager:
                 "--flat-playlist",
             ]
             
-            if settings.cookies_path and os.path.exists(settings.cookies_path):
-                cmd.extend(["--cookies", settings.cookies_path])
+            cmd.extend(self._get_cookie_args(settings))
                 
             cmd.append(url)
 
@@ -104,18 +132,48 @@ class DownloadManager:
                     continue
                 try:
                     info = json.loads(line)
+                    
+                    # Если это объект плейлиста
                     if info.get("_type") == "playlist":
-                        playlist_title = info.get("title", "Плейлист")
-                    elif info.get("url") or info.get("id"):
+                        if not playlist_title:
+                            playlist_title = info.get("title") or info.get("playlist_title") or "Плейлист"
+                        
+                        # Обработка встроенных записей (если они есть в этом же объекте)
+                        if "entries" in info and isinstance(info["entries"], list):
+                            for entry in info["entries"]:
+                                if not entry: continue
+                                video_id = entry.get("id", "")
+                                video_url = entry.get("url") or entry.get("webpage_url") or (f"https://www.youtube.com/watch?v={video_id}" if video_id else "")
+                                
+                                # Проверка на дубликаты
+                                if any(e["id"] == video_id or e["url"] == video_url for e in entries if video_id or video_url):
+                                    continue
+
+                                entries.append({
+                                    "id": video_id,
+                                    "url": video_url,
+                                    "title": entry.get("title") or f"Видео #{len(entries) + 1}",
+                                    "thumbnail": entry.get("thumbnail") or (f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg" if video_id else ""),
+                                    "index": len(entries) + 1,
+                                })
+                    
+                    # Если это отдельная запись о видео (стандарт для Flat Playlist)
+                    elif info.get("url") or info.get("id") or info.get("_type") in ("url", "url_transparent", "video"):
                         video_id = info.get("id", "")
+                        video_url = info.get("url") or info.get("webpage_url") or f"https://www.youtube.com/watch?v={video_id}"
+                        
+                        # Проверка на дубликаты
+                        if any(e["id"] == video_id or e["url"] == video_url for e in entries if video_id or video_url):
+                            continue
+
                         entries.append({
                             "id": video_id,
-                            "url": info.get("url", f"https://www.youtube.com/watch?v={video_id}"),
-                            "title": info.get("title", f"Видео #{len(entries) + 1}"),
-                            "thumbnail": f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg",
+                            "url": video_url,
+                            "title": info.get("title") or f"Видео #{len(entries) + 1}",
+                            "thumbnail": info.get("thumbnail") or f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg",
                             "index": len(entries) + 1,
                         })
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, KeyError):
                     continue
 
             return {
@@ -174,8 +232,7 @@ class DownloadManager:
         if settings.download_format.lower() == "mp3":
             cmd.extend(["-x", "--audio-format", "mp3"])
 
-        if settings.cookies_path and os.path.exists(settings.cookies_path):
-            cmd.extend(["--cookies", settings.cookies_path])
+        cmd.extend(self._get_cookie_args(settings))
 
         cmd.append(task.url)
 
@@ -186,8 +243,7 @@ class DownloadManager:
                 "-j",  # JSON output
                 "--no-playlist",
             ]
-            if settings.cookies_path and os.path.exists(settings.cookies_path):
-                title_cmd.extend(["--cookies", settings.cookies_path])
+            title_cmd.extend(self._get_cookie_args(settings))
             title_cmd.append(task.url)
 
             title_proc = await asyncio.create_subprocess_exec(

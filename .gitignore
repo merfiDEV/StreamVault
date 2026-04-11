@@ -1,1 +1,12 @@
 .qwen
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Cookies files — never commit credentials
+*.txt
+!requirements.txt
+chromewebstore.google.com_cookies.txt
+*_cookies.txt
+cookies.txt
