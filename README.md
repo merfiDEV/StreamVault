@@ -46,6 +46,12 @@
       <sub><b>Система Cookies</b></sub>
     </td>
   </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src=".assets/история.jpg" alt="История скачиваний" width="100%"/>
+      <sub><b>История скачиваний</b></sub>
+    </td>
+  </tr>
 </table>
 
 ---
