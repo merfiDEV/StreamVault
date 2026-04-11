@@ -211,6 +211,25 @@ tailwind.config = {
 }
 .animate-slide-in { animation: slideIn 0.3s ease-out; }
 .animate-slide-out { animation: slideOut 0.3s ease-in; }
+
+/* Кастомный скроллбар под дизайн */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--outline);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--outline-variant) transparent;
+}
 </style>
 </head>
 <body class="bg-background font-body text-on-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
@@ -250,7 +269,7 @@ tailwind.config = {
         </div>
 
         <!-- Dialog Body -->
-        <div class="flex-1 overflow-y-auto p-4">
+        <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
             <!-- Select All / Deselect All -->
             <div class="flex gap-3 mb-4 px-2">
                 <button id="select-all-btn" class="text-sm text-primary hover:text-primary-container font-semibold transition-colors">

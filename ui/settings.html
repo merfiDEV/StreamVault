@@ -142,6 +142,24 @@ h1, h2, h3 {
 .dark .signature-gradient {
     background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
 }
+/* Кастомный скроллбар под дизайн */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--outline-variant) transparent;
+}
+*::-webkit-scrollbar {
+    width: 4px;
+}
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+    background: var(--outline-variant);
+    border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--outline);
+}
 </style>
 <script id="tailwind-config">
 tailwind.config = {
