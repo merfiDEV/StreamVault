@@ -10,3 +10,10 @@ __pycache__/
 chromewebstore.google.com_cookies.txt
 *_cookies.txt
 cookies.txt
+
+# Downloaded media files
+*.mkv
+*.mp4
+*.webm
+*.mp3
+*.m4a
