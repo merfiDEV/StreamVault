@@ -268,8 +268,8 @@ tailwind.config = {
         <!-- Dialog Header -->
         <div class="flex items-center justify-between p-6 border-b border-outline-variant">
             <div>
-                <h2 id="playlist-title" class="text-xl font-headline font-bold text-on-surface" data-i18n="main.playlist_title">Плейлист</h2>
-                <p id="playlist-count" class="text-sm text-on-surface-variant mt-1">0 видео</p>
+                <h2 id="playlist-title" class="text-xl font-headline font-bold text-on-surface" data-i18n="main.playlist_title">Playlist</h2>
+                <p id="playlist-count" class="text-sm text-on-surface-variant mt-1"></p>
             </div>
             <button id="playlist-close" class="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant hover:text-on-surface">
                 <span class="material-symbols-outlined">close</span>
@@ -296,7 +296,7 @@ tailwind.config = {
         <!-- Dialog Footer -->
         <div class="p-6 border-t border-outline-variant flex justify-end">
             <button id="playlist-download-btn" class="signature-gradient text-on-primary px-8 py-3 rounded-full font-headline font-bold hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                Скачать (0)
+                <!-- Translated by JS -->
             </button>
         </div>
     </div>
@@ -320,7 +320,7 @@ tailwind.config = {
         <section class="flex flex-col gap-6">
             <div class="flex items-center justify-between px-2">
                 <h2 class="font-headline font-bold text-xl text-on-surface" data-i18n="main.active_downloads">Активные загрузки</h2>
-                <span id="active-count" class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-label font-semibold">0 items</span>
+                <span id="active-count" class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-label font-semibold"></span>
             </div>
             <div id="downloads-list" class="space-y-3">
                 <!-- Загрузки будут добавлены сюда динамически -->
@@ -478,7 +478,7 @@ function connectWebSocket() {
         const data = JSON.parse(event.data);
         if (data.type === 'progress_update') {
             renderDownloads(data.tasks);
-            activeCount.textContent = `${data.active_count} items`;
+            activeCount.textContent = t('common.items_count', { count: data.active_count });
         } else if (data.type === 'notification') {
             showToast(data.message, data.title);
         }
@@ -714,30 +714,30 @@ function renderDownloads(tasks) {
             <div class="flex-1 min-w-0 flex flex-col justify-between">
                 <div class="flex justify-between items-start gap-4">
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-on-surface truncate">${escapeHtml(task.title || 'Загрузка...')}</h3>
+                        <h3 class="font-semibold text-on-surface truncate">${escapeHtml(task.title || t('status.preparing'))}</h3>
                         <p class="text-sm text-secondary mt-1">${formatBytes(task.downloaded_bytes)} / ${formatBytes(task.total_bytes)} • <span class="${statusColor} font-medium italic">${statusText}</span></p>
                         ${task.speed ? `<p class="text-xs text-secondary mt-0.5">${task.speed} • ETA: ${task.eta}</p>` : ''}
                     </div>
                     <div class="flex gap-1 shrink-0">
                         ${showActions ? `
                             ${task.status === 'paused' ? `
-                            <button onclick="resumeTask('${task.id}')" class="text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="Продолжить">
+                            <button onclick="resumeTask('${task.id}')" class="text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="${t('common.resume')}">
                                 <span class="material-symbols-outlined text-[20px]">play_arrow</span>
                             </button>
                             ` : ''}
                             ${task.status === 'downloading' ? `
-                            <button onclick="pauseTask('${task.id}')" class="text-on-secondary-container hover:text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="Приостановить">
+                            <button onclick="pauseTask('${task.id}')" class="text-on-secondary-container hover:text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="${t('common.pause')}">
                                 <span class="material-symbols-outlined text-[20px]">pause</span>
                             </button>
                             ` : ''}
-                            <button onclick="cancelTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="Отменить">
+                            <button onclick="cancelTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="${t('common.cancel')}">
                                 <span class="material-symbols-outlined text-[20px]">close</span>
                             </button>
                         ` : `
-                            <button onclick="openFolder('${task.id}')" class="text-on-secondary-container hover:text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="Открыть папку">
+                            <button onclick="openFolder('${task.id}')" class="text-on-secondary-container hover:text-primary hover:bg-primary/10 p-1.5 rounded-full transition-colors" title="${t('common.open_folder')}">
                                 <span class="material-symbols-outlined text-[20px]">folder_open</span>
                             </button>
-                            <button onclick="removeTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="Удалить">
+                            <button onclick="removeTask('${task.id}')" class="text-on-secondary-container hover:text-error hover:bg-error/10 p-1.5 rounded-full transition-colors" title="${t('common.delete')}">
                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                             </button>
                         `}

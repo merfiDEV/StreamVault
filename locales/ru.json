@@ -16,7 +16,10 @@
     "delete_all": "Очистить всё",
     "copy_url": "URL",
     "open_folder": "Открыть папку",
-    "items": "items"
+    "items": "items",
+    "items_count": "{count} шт.",
+    "resume": "Продолжить",
+    "pause": "Приостановить"
   },
   "main": {
     "url_placeholder": "Вставьте URL видео или плейлиста...",

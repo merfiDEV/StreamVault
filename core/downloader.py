@@ -140,7 +140,7 @@ class DownloadManager:
                     # Если это объект плейлиста
                     if info.get("_type") == "playlist":
                         if not playlist_title:
-                            playlist_title = info.get("title") or info.get("playlist_title") or "Плейлист"
+                            playlist_title = info.get("title") or info.get("playlist_title") or t("main.playlist_title", lang=settings.language)
                         
                         # Обработка встроенных записей (если они есть в этом же объекте)
                         if "entries" in info and isinstance(info["entries"], list):
@@ -156,7 +156,7 @@ class DownloadManager:
                                 entries.append({
                                     "id": video_id,
                                     "url": video_url,
-                                    "title": entry.get("title") or f"Видео #{len(entries) + 1}",
+                                    "title": entry.get("title") or t("main.video_label", lang=settings.language, params={"index": len(entries) + 1}),
                                     "thumbnail": entry.get("thumbnail") or (f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg" if video_id else ""),
                                     "index": len(entries) + 1,
                                 })
@@ -173,7 +173,7 @@ class DownloadManager:
                         entries.append({
                             "id": video_id,
                             "url": video_url,
-                            "title": info.get("title") or f"Видео #{len(entries) + 1}",
+                            "title": info.get("title") or t("main.video_label", lang=settings.language, params={"index": len(entries) + 1}),
                             "thumbnail": info.get("thumbnail") or f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg",
                             "index": len(entries) + 1,
                         })
@@ -181,7 +181,7 @@ class DownloadManager:
                     continue
 
             return {
-                "title": playlist_title or "Плейлист",
+                "title": playlist_title or t("main.playlist_title", lang=settings.language),
                 "entries": entries,
                 "is_playlist": len(entries) >= 2,
             }

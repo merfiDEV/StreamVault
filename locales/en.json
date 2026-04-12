@@ -16,7 +16,10 @@
     "delete_all": "Clear all",
     "copy_url": "URL",
     "open_folder": "Open folder",
-    "items": "items"
+    "items": "items",
+    "items_count": "{count} items",
+    "resume": "Resume",
+    "pause": "Pause"
   },
   "main": {
     "url_placeholder": "Paste video or playlist URL...",
