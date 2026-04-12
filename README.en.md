@@ -1,5 +1,7 @@
 <div align="center">
 
+[English](README.en.md) | [Русский](README.md)
+
 # ⬇️ StreamVault
 
 **Minimalist desktop video downloader based on yt-dlp**

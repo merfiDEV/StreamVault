@@ -1,5 +1,7 @@
 <div align="center">
 
+[English](README.en.md) | [Русский](README.md)
+
 # ⬇️ StreamVault
 
 **Минималистичный десктопный загрузчик видео на базе yt-dlp**
