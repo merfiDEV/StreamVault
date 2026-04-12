@@ -230,6 +230,11 @@ tailwind.config = {
     scrollbar-width: thin;
     scrollbar-color: var(--outline-variant) transparent;
 }
+.drag-over {
+    border-color: var(--primary) !important;
+    background-color: var(--surface-container-low) !important;
+    transform: scale(1.01);
+}
 </style>
 </head>
 <body class="bg-background font-body text-on-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
@@ -301,7 +306,7 @@ tailwind.config = {
 <main class="flex-1 flex items-center justify-center px-6 py-12">
     <div class="w-full max-w-3xl flex flex-col gap-12">
         <!-- Input Section -->
-        <div class="relative flex flex-col md:flex-row gap-4 p-3 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-surface-container">
+        <div id="url-input-container" class="relative flex flex-col md:flex-row gap-4 p-3 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-surface-container transition-all duration-300">
             <div class="flex-1 flex items-center px-4 gap-4">
                 <span class="material-symbols-outlined text-primary">link</span>
                 <input id="url-input" class="w-full bg-transparent border-none focus:ring-0 text-xl font-body text-on-surface placeholder:text-on-secondary-container" data-i18n-placeholder="main.url_placeholder" placeholder="Вставьте URL видео или плейлиста..." type="text"/>
@@ -434,6 +439,34 @@ async function initI18n() {
 
 // Вызываем СРАЗУ — переводы применятся мгновенно из кеша
 initI18n();
+
+// --- Drag & Drop ---
+const urlInputContainer = document.getElementById('url-input-container');
+
+urlInputContainer.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    urlInputContainer.classList.add('drag-over');
+});
+
+urlInputContainer.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    urlInputContainer.classList.remove('drag-over');
+});
+
+urlInputContainer.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    urlInputContainer.classList.remove('drag-over');
+
+    const url = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('url');
+    if (url) {
+        urlInput.value = url;
+        // Можно имитировать клик по кнопке, но лучше просто заполнить
+        // downloadBtn.click(); 
+    }
+});
 
 // WebSocket подключение
 let ws = null;
