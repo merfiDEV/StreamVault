@@ -498,6 +498,12 @@ downloadBtn.addEventListener('click', async () => {
     const url = urlInput.value.trim();
     if (!url) return;
 
+    // Проверка на корректность YouTube ссылки
+    if (!isValidYoutubeUrl(url)) {
+        showToast(t('notifications.invalid_youtube_url'));
+        return;
+    }
+
     downloadBtn.disabled = true;
     downloadBtn.textContent = t('main.download_btn_checking');
 
@@ -542,6 +548,34 @@ downloadBtn.addEventListener('click', async () => {
         settingsLink.classList.remove('pointer-events-none', 'opacity-50');
     }
 });
+
+/**
+ * Возвращает true если это корректная ссылка на YouTube.
+ */
+function isValidYoutubeUrl(url) {
+    try {
+        const u = new URL(url);
+        const host = u.hostname.replace('www.', '');
+        const validHosts = ['youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com'];
+        
+        // Проверяем хост
+        if (!validHosts.includes(host)) return false;
+        
+        // Для youtube.com проверяем наличие параметров или путей (чтобы не пропускать просто youtube.com)
+        if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com') {
+            return u.pathname === '/watch' || u.pathname === '/playlist' || u.pathname.startsWith('/shorts/') || u.pathname.startsWith('/v/');
+        }
+        
+        // youtu.be/ID — всегда валидно если есть путь
+        if (host === 'youtu.be') {
+            return u.pathname.length > 1;
+        }
+
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Возвращает true если URL явно указывает на одиночное видео.

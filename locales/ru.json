@@ -107,7 +107,8 @@
   "notifications": {
     "format_mismatch": "Формат {actual} вместо {desired}",
     "url_copied": "URL скопирован",
-    "settings_saved": "Настройки сохранены"
+    "settings_saved": "Настройки сохранены",
+    "invalid_youtube_url": "Пожалуйста, вставьте корректную ссылку на YouTube видео или плейлист."
   },
   "languages": {
     "ru": "Русский",
