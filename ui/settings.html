@@ -379,6 +379,24 @@ tailwind.config = {
                 </label>
             </div>
 
+            <!-- Max Concurrent Downloads -->
+            <div class="p-4 bg-surface-container-lowest rounded-xl">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="p-3 bg-primary-container/10 rounded-xl">
+                        <span class="material-symbols-outlined text-primary">stacked_bar_chart</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-on-surface" data-i18n="settings.concurrent_label">Параллельные загрузки</p>
+                        <p class="text-sm text-on-surface-variant" data-i18n="settings.concurrent_desc">Сколько файлов качать одновременно</p>
+                    </div>
+                    <span id="concurrent-value" class="text-sm font-bold text-on-surface bg-surface-container-high px-3 py-1 rounded-full">2</span>
+                </div>
+                <input id="concurrent-slider" type="range" min="1" max="6" step="1" value="2" class="w-full accent-[color:var(--primary)]">
+                <div class="flex justify-between text-xs text-on-surface-variant mt-1">
+                    <span>1</span><span>6</span>
+                </div>
+            </div>
+
             <!-- SponsorBlock Toggle -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl">
@@ -573,6 +591,26 @@ tailwind.config = {
                     </div>
                 </div>
             </div>
+
+            <!-- yt-dlp update -->
+            <div class="p-4 bg-surface-container-lowest rounded-xl">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="p-3 bg-primary-container/10 rounded-xl">
+                        <span class="material-symbols-outlined text-primary">system_update</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-on-surface" data-i18n="settings.ytdlp_label">yt-dlp</p>
+                        <p id="ytdlp-version" class="text-sm text-on-surface-variant">—</p>
+                    </div>
+                    <button id="ytdlp-check" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold" data-i18n="settings.ytdlp_check">
+                        Проверить
+                    </button>
+                    <button id="ytdlp-update" class="px-4 py-2 rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors text-sm font-semibold" data-i18n="settings.ytdlp_update">
+                        Обновить
+                    </button>
+                </div>
+                <p id="ytdlp-hint" class="text-xs text-on-surface-variant"></p>
+            </div>
         </div>
     </div>
 
@@ -741,6 +779,7 @@ let formatValue = 'mp4';
 let cookieSource = 'none';  // 'none' | 'file' | 'browser'
 let browserValue = 'chrome';
 let languageValue = 'ru';
+let concurrentValue = 2;
 
 // Dropdown функции
 function setupDropdown(dropdownBtnId, menuId, optionClass, selectedDisplayId, onSelect) {
@@ -908,6 +947,12 @@ function applySettings(settings) {
     updateLanguageUI();
     applyTranslations();
 
+    concurrentValue = Math.max(1, Math.min(6, parseInt(settings.max_concurrent_downloads || 2)));
+    const slider = document.getElementById('concurrent-slider');
+    const label = document.getElementById('concurrent-value');
+    if (slider) slider.value = String(concurrentValue);
+    if (label) label.textContent = String(concurrentValue);
+
     // Применяем тёмную тему
     if (settings.dark_theme) {
         document.documentElement.classList.add('dark');
@@ -928,6 +973,7 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         default_quality: qualityValue,
         download_format: formatValue,
         save_location: currentSettings.save_location,
+        max_concurrent_downloads: concurrentValue,
         dark_theme: document.getElementById('dark-theme-toggle').checked,
         wifi_only: document.getElementById('wifi-only-toggle').checked,
         auto_clear_queue: document.getElementById('auto-clear-toggle').checked,
@@ -1112,6 +1158,7 @@ async function saveSettingsAndReload() {
         default_quality: qualityValue,
         download_format: formatValue,
         save_location: currentSettings?.save_location || '',
+        max_concurrent_downloads: concurrentValue,
         dark_theme: document.getElementById('dark-theme-toggle')?.checked ?? false,
         wifi_only: document.getElementById('wifi-only-toggle')?.checked ?? false,
         auto_clear_queue: document.getElementById('auto-clear-toggle')?.checked ?? false,
@@ -1139,6 +1186,12 @@ async function saveSettingsAndReload() {
 loadSettings();
 initI18n();
 
+document.getElementById('concurrent-slider')?.addEventListener('input', (e) => {
+    concurrentValue = parseInt(e.target.value || '2');
+    const label = document.getElementById('concurrent-value');
+    if (label) label.textContent = String(concurrentValue);
+});
+
 // Загрузка реальных данных хранилища
 async function updateStorageUsage() {
     try {
@@ -1159,6 +1212,62 @@ async function updateStorageUsage() {
 }
 
 updateStorageUsage();
+
+async function refreshYtDlpInfo() {
+    try {
+        const res = await fetch(`${API_URL}/api/ytdlp/info`);
+        const data = await res.json();
+        const el = document.getElementById('ytdlp-version');
+        const hint = document.getElementById('ytdlp-hint');
+        if (el) el.textContent = `Current: ${data.current || '—'} • Latest: ${data.latest || '—'}`;
+        if (hint) hint.textContent = data.latest && data.current && data.latest !== data.current ? t('settings.ytdlp_update_available') : '';
+    } catch {}
+}
+
+document.getElementById('ytdlp-check')?.addEventListener('click', async () => {
+    await refreshYtDlpInfo();
+});
+
+document.getElementById('ytdlp-update')?.addEventListener('click', async () => {
+    const btn = document.getElementById('ytdlp-update');
+    const hint = document.getElementById('ytdlp-hint');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = t('settings.ytdlp_updating') === 'settings.ytdlp_updating' ? 'Обновление...' : t('settings.ytdlp_updating');
+    }
+    if (hint) {
+        hint.textContent = 'Установка обновления, пожалуйста подождите...';
+        hint.classList.remove('text-on-surface-variant');
+        hint.classList.add('text-primary');
+    }
+    try {
+        const res = await fetch(`${API_URL}/api/ytdlp/update`, { method: 'POST' });
+        const data = await res.json();
+        if (data?.error) {
+            alert(data.error);
+            if (hint) hint.textContent = '';
+        } else {
+            if (hint) {
+                hint.textContent = 'yt-dlp успешно обновлен!';
+                setTimeout(() => {
+                    hint.classList.remove('text-primary');
+                    hint.classList.add('text-on-surface-variant');
+                }, 3000);
+            }
+        }
+        await refreshYtDlpInfo();
+    } catch {
+        alert('Ошибка сети при обновлении yt-dlp');
+        if (hint) hint.textContent = '';
+    }
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText;
+    }
+});
+
+refreshYtDlpInfo();
 
 // Обработка тумблера SponsorBlock (показ предупреждения)
 document.getElementById('sponsorblock-toggle')?.addEventListener('change', (e) => {

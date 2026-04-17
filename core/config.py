@@ -12,6 +12,7 @@ class Settings(BaseModel):
     default_quality: str = "1080p"
     download_format: str = "mp4"
     save_location: str = str(Path.home() / "Videos" / "StreamVault")
+    max_concurrent_downloads: int = 2
     dark_theme: bool = False
     wifi_only: bool = False
     auto_clear_queue: bool = False

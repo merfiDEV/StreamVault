@@ -877,6 +877,9 @@ function renderDownloads(tasks) {
         const statusColor = getStatusColor(task.status);
         const progressBarColor = getProgressBarColor(task.status);
         const showActions = showActionButtons(task.status);
+        const canRetry = task.status === 'error';
+        const canOpenFile = task.status === 'completed' && task.file_path;
+        const canCopyLog = task.status === 'error';
         
         return `
         <div class="bg-surface-container-low p-4 rounded-2xl border border-surface-container flex gap-4 group hover:border-outline-variant transition-colors ${task.status === 'completed' ? 'opacity-60' : ''}">
@@ -921,6 +924,31 @@ function renderDownloads(tasks) {
                     <div class="${progressBarColor} h-full rounded-full transition-all duration-500" style="width: ${task.progress}%"></div>
                 </div>
                 ${task.error_message ? `<p class="text-xs text-error mt-1">${escapeHtml(task.error_message)}</p>` : ''}
+                ${task.error_help ? `<p class="text-xs text-on-surface-variant mt-1">${escapeHtml(task.error_help)}</p>` : ''}
+
+                <div class="flex flex-wrap gap-2 mt-3">
+                    ${canOpenFile ? `
+                    <button onclick="openFileByTask('${task.id}')" class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-xs font-semibold transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">open_in_new</span> ${t('common.open_file')}
+                    </button>
+                    ` : ''}
+                    <button onclick="openFolderByTask('${task.id}')" class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-xs font-semibold transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">folder_open</span> ${t('common.open_folder')}
+                    </button>
+                    <button onclick="copyUrlByTask('${task.id}')" class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-xs font-semibold transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">content_copy</span> ${t('common.copy_url')}
+                    </button>
+                    ${canRetry ? `
+                    <button onclick="retryTask('${task.id}')" class="px-3 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span> ${t('common.retry')}
+                    </button>
+                    ` : ''}
+                    ${canCopyLog ? `
+                    <button onclick="copyLog('${task.id}')" class="px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-xs font-semibold transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">terminal</span> ${t('common.copy_log')}
+                    </button>
+                    ` : ''}
+                </div>
             </div>
         </div>
         `;
@@ -929,6 +957,8 @@ function renderDownloads(tasks) {
 
 function getStatusText(status) {
     const keyMap = {
+        'queued': 'status.queued',
+        'preparing': 'status.preparing',
         'downloading': 'status.downloading',
         'paused': 'status.paused',
         'completed': 'status.completed',
@@ -941,6 +971,8 @@ function getStatusText(status) {
 
 function getStatusColor(status) {
     const map = {
+        'queued': 'text-secondary',
+        'preparing': 'text-tertiary',
         'downloading': 'text-primary',
         'paused': 'text-on-secondary-container',
         'completed': 'text-tertiary',
@@ -952,6 +984,8 @@ function getStatusColor(status) {
 
 function getProgressBarColor(status) {
     const map = {
+        'queued': 'bg-secondary',
+        'preparing': 'bg-tertiary',
         'downloading': 'bg-primary',
         'paused': 'bg-secondary',
         'completed': 'bg-tertiary',
@@ -1056,6 +1090,65 @@ window.cancelTask = async function(id) {
         renderDownloads(tasks);
     } catch (err) {
         console.error('Ошибка обновления списка:', err);
+    }
+}
+
+async function getTaskById(id) {
+    try {
+        const response = await fetch(`${API_URL}/api/downloads`);
+        const tasks = await response.json();
+        return tasks.find(t => t.id === id);
+    } catch {
+        return null;
+    }
+}
+
+window.retryTask = async function(id) {
+    await fetch(`${API_URL}/api/download/${id}/retry`, { method: 'POST' });
+}
+
+window.copyUrlByTask = async function(id) {
+    const task = await getTaskById(id);
+    if (!task) return;
+    try {
+        await navigator.clipboard.writeText(task.url || '');
+        showToast(t('notifications.url_copied'));
+    } catch {}
+}
+
+window.openFolderByTask = async function(id) {
+    const task = await getTaskById(id);
+    const path = task?.file_path || '';
+    await fetch(`${API_URL}/api/open-folder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path })
+    });
+}
+
+window.openFileByTask = async function(id) {
+    const task = await getTaskById(id);
+    const path = task?.file_path || '';
+    if (!path) return;
+    await fetch(`${API_URL}/api/open-file`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path })
+    });
+}
+
+window.copyLog = async function(id) {
+    try {
+        const res = await fetch(`${API_URL}/api/download/${id}/log`);
+        const data = await res.json();
+        if (data?.log) {
+            await navigator.clipboard.writeText(data.log);
+            showToast(t('notifications.log_copied'));
+        } else if (data?.error) {
+            showToast(data.error);
+        }
+    } catch {
+        showToast('Log error');
     }
 }
 

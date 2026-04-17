@@ -19,6 +19,8 @@ from core.utils import get_resource_path, get_data_path, ensure_file_from_resour
 
 
 class DownloadStatus(str, Enum):
+    QUEUED = "queued"
+    PREPARING = "preparing"
     DOWNLOADING = "downloading"
     PAUSED = "paused"
     COMPLETED = "completed"
@@ -40,11 +42,15 @@ class DownloadTask:
         self.speed = ""
         self.eta = ""
         self.error_message = ""
+        self.error_code = ""
+        self.error_help = ""
         self.format_warning = ""
         self.thumbnail = ""
+        self.file_path: str = ""
         self.resumed = False
         self.removed = False
         self.process: Optional[asyncio.subprocess.Process] = None
+        self.log_file: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -58,8 +64,12 @@ class DownloadTask:
             "speed": self.speed,
             "eta": self.eta,
             "error_message": self.error_message,
+            "error_code": self.error_code,
+            "error_help": self.error_help,
+            "log_file": self.log_file,
             "format_warning": self.format_warning,
             "thumbnail": self.thumbnail,
+            "file_path": self.file_path,
             "resumed": self.resumed,
         }
 
@@ -71,11 +81,99 @@ class DownloadManager:
         self.tasks: dict[str, DownloadTask] = {}
         data_ytdlp = get_data_path("yt-dlp.exe")
         self.ytdlp_path = ensure_file_from_resources("yt-dlp.exe", data_ytdlp)
+        initial_limit = max(1, int(getattr(load_settings(), "max_concurrent_downloads", 2) or 2))
+        self._semaphore = asyncio.Semaphore(initial_limit)
 
     def _ytdlp_subprocess_kwargs(self) -> dict:
         if os.name == "nt":
             return {"creationflags": subprocess.CREATE_NO_WINDOW}
         return {}
+
+    def _refresh_concurrency(self, settings: Settings) -> None:
+        try:
+            limit = max(1, int(getattr(settings, "max_concurrent_downloads", 2) or 2))
+        except Exception:
+            limit = 2
+        current_limit = getattr(self, "_concurrency_limit", None)
+        if current_limit == limit:
+            return
+        self._concurrency_limit = limit
+        self._semaphore = asyncio.Semaphore(limit)
+
+    def _get_task_log_path(self, task: DownloadTask) -> Path:
+        logs_dir = get_data_path("logs").parent / "logs"
+        try:
+            logs_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        return logs_dir / f"task_{task.id}.log"
+
+    def _append_log(self, task: DownloadTask, text: str) -> None:
+        try:
+            log_path = self._get_task_log_path(task)
+            task.log_file = str(log_path)
+            with open(log_path, "a", encoding="utf-8", errors="replace") as f:
+                f.write(text)
+                if not text.endswith("\n"):
+                    f.write("\n")
+        except Exception:
+            pass
+
+    def _try_extract_output_path(self, line: str) -> str:
+        if not line:
+            return ""
+        m = re.search(r"Destination:\s(.+)$", line)
+        if m:
+            return m.group(1).strip().strip('"')
+        m = re.search(r"Merging formats into \"(.+)\"$", line)
+        if m:
+            return m.group(1).strip()
+        return ""
+
+    async def _consume_stderr(self, task: DownloadTask) -> str:
+        buf = []
+        try:
+            if not task.process or not task.process.stderr:
+                return ""
+            while True:
+                line = await task.process.stderr.readline()
+                if not line:
+                    break
+                text = line.decode("utf-8", errors="replace").rstrip()
+                if text:
+                    self._append_log(task, text)
+                    out = self._try_extract_output_path(text)
+                    if out:
+                        task.file_path = out
+                buf.append(text)
+        except Exception:
+            pass
+        return "\n".join([x for x in buf if x])
+
+    def _classify_error(self, stderr_text: str) -> tuple[str, str, str]:
+        raw = (stderr_text or "").strip()
+        s = raw.lower()
+        if not raw:
+            return "unknown", "Unknown error", ""
+        if "unable to download webpage" in s or "failed to resolve" in s or "name or service not known" in s:
+            return "network", "Проблема сети (не удаётся открыть страницу)", "Проверьте интернет/VPN/фаервол."
+        if "timed out" in s or "timeout" in s:
+            return "network_timeout", "Превышено время ожидания сети", "Попробуйте ещё раз или включите VPN."
+        if "http error 429" in s or "too many requests" in s:
+            return "rate_limited", "Слишком много запросов (429)", "Подождите или включите cookies/VPN."
+        if "confirm you're not a bot" in s or "confirm you’re not a bot" in s or "captcha" in s:
+            return "bot_check", "YouTube требует подтверждение (anti-bot)", "Включите cookies (браузер) или попробуйте VPN."
+        if "private video" in s:
+            return "private", "Приватное видео", "Нужны cookies от аккаунта с доступом."
+        if "age-restricted" in s or "age restricted" in s or "confirm your age" in s:
+            return "age_restricted", "Возрастное ограничение", "Включите cookies от аккаунта (браузер/файл)."
+        if ("not available in your country" in s) or ("geo-restricted" in s) or (("country" in s) and ("blocked" in s)):
+            return "geo_blocked", "Ограничено по региону", "Попробуйте VPN или другой регион."
+        if "cookies" in s and ("required" in s or "use --cookies" in s):
+            return "cookies_required", "Требуются cookies", "Откройте настройки и включите cookies (браузер/файл)."
+        if "video unavailable" in s or "this video is unavailable" in s:
+            return "unavailable", "Видео недоступно", "Проверьте ссылку или доступность видео."
+        return "error", raw[:200], ""
 
     def _get_cookie_args(self, settings: Settings) -> list[str]:
         """Получить аргументы для куки на основе настроек."""
@@ -108,6 +206,7 @@ class DownloadManager:
 
         try:
             settings = load_settings()
+            self._refresh_concurrency(settings)
             cmd = [
                 str(self.ytdlp_path),
                 "-j",
@@ -127,7 +226,9 @@ class DownloadManager:
             stdout, stderr = await proc.communicate()
 
             if proc.returncode != 0:
-                return {"error": stderr.decode("utf-8", errors="replace")[:200]}
+                raw = stderr.decode("utf-8", errors="replace")
+                _, msg, help_text = self._classify_error(raw)
+                return {"error": msg, "help": help_text}
 
             lines = stdout.decode("utf-8", errors="replace").strip().split("\n")
             entries = []
@@ -188,8 +289,9 @@ class DownloadManager:
     async def add_download(self, url: str) -> DownloadTask:
         """Добавить новую задачу загрузки."""
         settings = load_settings()
+        self._refresh_concurrency(settings)
 
-        task = DownloadTask(url=url, title=t("status.loading_metadata", lang=settings.language))
+        task = DownloadTask(url=url, title=t("status.queued", lang=settings.language), status=DownloadStatus.QUEUED)
         self.tasks[task.id] = task
 
         asyncio.create_task(self._run_download(task, settings))
@@ -199,6 +301,17 @@ class DownloadManager:
         """Выполнить загрузку через yt-dlp."""
         def was_removed() -> bool:
             return task.removed or task.id not in self.tasks
+
+        task.status = DownloadStatus.QUEUED
+        task.progress = 0.0
+        self._append_log(task, f"[{task.id}] queued url={task.url}")
+
+        async with self._semaphore:
+            if was_removed():
+                return
+
+            task.status = DownloadStatus.PREPARING
+            task.title = t("status.loading_metadata", lang=settings.language)
 
         if not self.ytdlp_path.exists():
             task.status = DownloadStatus.ERROR
@@ -284,12 +397,15 @@ class DownloadManager:
             else:
                 task.title = task.url
 
+            task.status = DownloadStatus.DOWNLOADING
             task.process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 **self._ytdlp_subprocess_kwargs(),
             )
+
+            stderr_task = asyncio.create_task(self._consume_stderr(task))
 
             while True:
                 if task.status == DownloadStatus.PAUSED:
@@ -301,6 +417,8 @@ class DownloadManager:
                     break
 
                 text = line.decode("utf-8", errors="replace").strip()
+                if text:
+                    self._append_log(task, text)
 
                 parts = text.split()
                 if len(parts) >= 5:
@@ -335,6 +453,7 @@ class DownloadManager:
                         pass
 
             await task.process.wait()
+            stderr_output = await stderr_task
 
             if was_removed():
                 return
@@ -371,12 +490,13 @@ class DownloadManager:
             else:
                 if was_removed():
                     return
-                stderr_output = ""
-                if task.process.stderr:
-                    stderr_output = await task.process.stderr.read()
-                    stderr_output = stderr_output.decode("utf-8", errors="replace")
                 task.status = DownloadStatus.ERROR
-                task.error_message = stderr_output.strip()[:200] if stderr_output else "Unknown error"
+                if stderr_output:
+                    self._append_log(task, "\n[stderr]\n" + stderr_output)
+                code, msg, help_text = self._classify_error(stderr_output)
+                task.error_code = code
+                task.error_message = msg
+                task.error_help = help_text
                 
                 try:
                     history_manager.add_record(
@@ -397,7 +517,12 @@ class DownloadManager:
             if was_removed():
                 return
             task.status = DownloadStatus.ERROR
-            task.error_message = str(e)[:200]
+            raw = str(e)
+            self._append_log(task, "\n[exception]\n" + raw)
+            code, msg, help_text = self._classify_error(raw)
+            task.error_code = code
+            task.error_message = msg
+            task.error_help = help_text
             
             try:
                 history_manager.add_record(
@@ -502,6 +627,7 @@ class DownloadManager:
 
         try:
             settings = load_settings()
+            self._refresh_concurrency(settings)
             cmd = [
                 str(self.ytdlp_path),
                 "-j",
@@ -521,8 +647,9 @@ class DownloadManager:
             stdout, stderr = await proc.communicate()
 
             if proc.returncode != 0:
-                error_text = stderr.decode("utf-8", errors="replace")[:200]
-                return {"error": error_text or "Search failed"}
+                raw = stderr.decode("utf-8", errors="replace")
+                _, msg, help_text = self._classify_error(raw)
+                return {"error": msg or "Search failed", "help": help_text}
 
             lines = stdout.decode("utf-8", errors="replace").strip().split("\n")
             results = []

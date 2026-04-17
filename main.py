@@ -5,6 +5,8 @@ import json
 import os
 import shutil
 import subprocess
+import urllib.request
+import urllib.error
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -70,8 +72,12 @@ class TaskResponse(BaseModel):
     speed: str
     eta: str
     error_message: str
+    error_code: str = ""
+    error_help: str = ""
     thumbnail: str = ""
     resumed: bool = False
+    log_file: str = ""
+    file_path: str = ""
 
 
 # --- WebSocket для real-time обновлений ---
@@ -174,6 +180,104 @@ async def search_videos(request: SearchRequest):
     """Поиск видео на YouTube через yt-dlp."""
     result = await download_manager.search_videos(request.query, request.limit)
     return result
+
+
+@app.get("/api/download/{task_id}/log")
+async def get_task_log(task_id: str):
+    task = download_manager.get_task(task_id)
+    if not task or not getattr(task, "log_file", ""):
+        return {"error": "Log not found"}
+    try:
+        path = Path(task.log_file)
+        if not path.exists():
+            return {"error": "Log not found"}
+        content = path.read_text(encoding="utf-8", errors="replace")
+        if len(content) > 20000:
+            content = content[-20000:]
+        return {"task_id": task_id, "log": content}
+    except Exception as e:
+        return {"error": str(e)[:200]}
+
+
+def _run_ytdlp_version() -> str:
+    try:
+        cmd = [str(download_manager.ytdlp_path), "--version"]
+        p = subprocess.run(cmd, capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        out = (p.stdout or p.stderr or "").strip()
+        return out.splitlines()[0] if out else ""
+    except Exception:
+        return ""
+
+
+def _fetch_latest_ytdlp_tag() -> str:
+    try:
+        req = urllib.request.Request(
+            "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest",
+            headers={"User-Agent": "StreamVault"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+        return str(data.get("tag_name") or "").lstrip("v")
+    except Exception:
+        return ""
+
+
+@app.get("/api/ytdlp/info")
+async def ytdlp_info():
+    current = _run_ytdlp_version()
+    latest = _fetch_latest_ytdlp_tag()
+    return {"current": current, "latest": latest, "path": str(download_manager.ytdlp_path)}
+
+
+@app.post("/api/ytdlp/update")
+def ytdlp_update():
+    if download_manager.get_active_count() > 0:
+        return {"error": "Есть активные загрузки. Остановите их перед обновлением yt-dlp."}
+    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+    target = Path(download_manager.ytdlp_path)
+    tmp = target.with_suffix(".tmp")
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            data = resp.read()
+        tmp.write_bytes(data)
+        tmp.replace(target)
+        return {"status": "updated", "current": _run_ytdlp_version()}
+    except (urllib.error.URLError, OSError) as e:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+        return {"error": str(e)[:200]}
+
+
+@app.post("/api/download/{task_id}/retry", response_model=TaskResponse)
+async def retry_download(task_id: str):
+    task = download_manager.get_task(task_id)
+    if not task:
+        return JSONResponse(status_code=404, content={"error": "Task not found"})
+    new_task = await download_manager.add_download(task.url)
+    return TaskResponse(**new_task.to_dict())
+
+
+@app.post("/api/open-file")
+async def open_file(request: Request):
+    try:
+        body = await request.json()
+        p = body.get("path") or ""
+        if not p:
+            return {"error": "Path required"}
+        path = Path(p)
+        if path.is_dir():
+            os.startfile(str(path))
+        else:
+            if path.exists():
+                os.startfile(str(path))
+            else:
+                return {"error": "File not found"}
+        return {"status": "opened"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # --- API Endpoints ---

@@ -20,6 +20,10 @@
     "items_count": "{count} items",
     "resume": "Resume",
     "pause": "Pause"
+    ,
+    "retry": "Retry",
+    "copy_log": "Copy log",
+    "open_file": "Open file"
   },
   "main": {
     "url_placeholder": "Paste URL or ?query to search...",
@@ -60,6 +64,8 @@
     "save_location_picker_title": "Choose save location",
     "random_filename_label": "Random filename",
     "random_filename_desc": "Instead of the original video title",
+    "concurrent_label": "Concurrent downloads",
+    "concurrent_desc": "How many files to download at once",
     "sponsorblock_label": "SponsorBlock integration",
     "sponsorblock_desc": "Cut out ads, intros, and sponsor segments",
     "sponsorblock_warning": "Enabling SponsorBlock may increase video processing time and in rare cases may work unstably.",
@@ -93,6 +99,11 @@
     "storage_free": "{value} free",
     "storage_folder": "Downloads folder: {size}",
     "storage_file_count": "{count} files"
+    ,
+    "ytdlp_label": "yt-dlp",
+    "ytdlp_check": "Check",
+    "ytdlp_update": "Update",
+    "ytdlp_update_available": "yt-dlp update available"
   },
   "history": {
     "page_title": "History",
@@ -118,6 +129,8 @@
     "url_copied": "URL copied",
     "settings_saved": "Settings saved",
     "invalid_youtube_url": "Please paste a valid YouTube video or playlist URL."
+    ,
+    "log_copied": "Log copied"
   },
   "languages": {
     "ru": "Русский",

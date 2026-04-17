@@ -20,6 +20,10 @@
     "items_count": "{count} шт.",
     "resume": "Продолжить",
     "pause": "Приостановить"
+    ,
+    "retry": "Повторить",
+    "copy_log": "Копировать лог",
+    "open_file": "Открыть файл"
   },
   "main": {
     "url_placeholder": "Вставьте URL или ?запрос для поиска...",
@@ -60,6 +64,8 @@
     "save_location_picker_title": "Выберите путь сохранения",
     "random_filename_label": "Случайное имя файла",
     "random_filename_desc": "Вместо оригинального названия видео",
+    "concurrent_label": "Параллельные загрузки",
+    "concurrent_desc": "Сколько файлов качать одновременно",
     "sponsorblock_label": "Интеграция SponsorBlock",
     "sponsorblock_desc": "Вырезать рекламу, интро и спонсорские вставки",
     "sponsorblock_warning": "Включение SponsorBlock может увеличить время обработки видео и в редких случаях работать нестабильно.",
@@ -93,6 +99,11 @@
     "storage_free": "{value} свободно",
     "storage_folder": "Папка загрузок: {size}",
     "storage_file_count": "{count} файлов"
+    ,
+    "ytdlp_label": "yt-dlp",
+    "ytdlp_check": "Проверить",
+    "ytdlp_update": "Обновить",
+    "ytdlp_update_available": "Доступно обновление yt-dlp"
   },
   "history": {
     "page_title": "История",
@@ -118,6 +129,8 @@
     "url_copied": "URL скопирован",
     "settings_saved": "Настройки сохранены",
     "invalid_youtube_url": "Пожалуйста, вставьте корректную ссылку на YouTube видео или плейлист."
+    ,
+    "log_copied": "Лог скопирован"
   },
   "languages": {
     "ru": "Русский",
