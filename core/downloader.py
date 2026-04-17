@@ -15,7 +15,7 @@ import psutil
 from core.config import Settings, load_settings
 from core.i18n import t
 from core.history import history_manager
-from core.utils import get_resource_path
+from core.utils import get_resource_path, get_data_path, ensure_file_from_resources
 
 
 class DownloadStatus(str, Enum):
@@ -69,35 +69,36 @@ class DownloadManager:
 
     def __init__(self):
         self.tasks: dict[str, DownloadTask] = {}
-        self.ytdlp_path = get_resource_path("yt-dlp.exe")
+        data_ytdlp = get_data_path("yt-dlp.exe")
+        self.ytdlp_path = ensure_file_from_resources("yt-dlp.exe", data_ytdlp)
+
+    def _ytdlp_subprocess_kwargs(self) -> dict:
+        if os.name == "nt":
+            return {"creationflags": subprocess.CREATE_NO_WINDOW}
+        return {}
 
     def _get_cookie_args(self, settings: Settings) -> list[str]:
         """Получить аргументы для куки на основе настроек."""
-        # Режим 1: Куки из браузера
         if settings.use_browser_cookies and settings.selected_browser:
             return ["--cookies-from-browser", settings.selected_browser]
-        # Режим 2: Куки из файла .txt (Netscape формат)
         elif settings.cookies_path:
             path = settings.cookies_path.strip()
             if not path:
                 return []
             if not os.path.exists(path):
-                return []  # Файл не существует — игнорируем без ошибки
-            # Проверяем что это не SQLite база Chrome (бинарный файл)
+                return []
             try:
                 with open(path, 'rb') as f:
                     header = f.read(16)
-                # SQLite файлы начинаются с 'SQLite format 3'
                 if header.startswith(b'SQLite format 3'):
-                    return []  # Это база Chrome — игнорируем
-                # Проверяем что файл текстовый (Netscape cookies.txt)
+                    return []
                 with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                     first_line = f.readline()
                 if '# Netscape HTTP Cookie File' in first_line or '# HTTP Cookie File' in first_line or first_line.strip() == '' or '\t' in first_line:
                     return ["--cookies", path]
-                return ["--cookies", path]  # Передаём как есть, yt-dlp сам разберётся
+                return ["--cookies", path]
             except (OSError, PermissionError):
-                return []  # Нет доступа — игнорируем
+                return []
         return []
 
     async def get_playlist_info(self, url: str) -> dict:
@@ -121,6 +122,7 @@ class DownloadManager:
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                **self._ytdlp_subprocess_kwargs(),
             )
             stdout, stderr = await proc.communicate()
 
@@ -137,19 +139,16 @@ class DownloadManager:
                 try:
                     info = json.loads(line)
                     
-                    # Если это объект плейлиста
                     if info.get("_type") == "playlist":
                         if not playlist_title:
                             playlist_title = info.get("title") or info.get("playlist_title") or t("main.playlist_title", lang=settings.language)
                         
-                        # Обработка встроенных записей (если они есть в этом же объекте)
                         if "entries" in info and isinstance(info["entries"], list):
                             for entry in info["entries"]:
                                 if not entry: continue
                                 video_id = entry.get("id", "")
                                 video_url = entry.get("url") or entry.get("webpage_url") or (f"https://www.youtube.com/watch?v={video_id}" if video_id else "")
                                 
-                                # Проверка на дубликаты
                                 if any(e["id"] == video_id or e["url"] == video_url for e in entries if video_id or video_url):
                                     continue
 
@@ -161,12 +160,10 @@ class DownloadManager:
                                     "index": len(entries) + 1,
                                 })
                     
-                    # Если это отдельная запись о видео (стандарт для Flat Playlist)
                     elif info.get("url") or info.get("id") or info.get("_type") in ("url", "url_transparent", "video"):
                         video_id = info.get("id", "")
                         video_url = info.get("url") or info.get("webpage_url") or f"https://www.youtube.com/watch?v={video_id}"
                         
-                        # Проверка на дубликаты
                         if any(e["id"] == video_id or e["url"] == video_url for e in entries if video_id or video_url):
                             continue
 
@@ -222,7 +219,6 @@ class DownloadManager:
             format_str = "bestaudio"
 
         if settings.random_filename:
-            # Используем случайное имя (8 символов) + расширение
             output_template = str(Path(settings.save_location) / f"{uuid.uuid4().hex[:8]}.%(ext)s")
         else:
             output_template = str(Path(settings.save_location) / "%(title)s.%(ext)s")
@@ -231,7 +227,7 @@ class DownloadManager:
             str(self.ytdlp_path),
             "--newline",
             "--no-colors",
-            "--continue",  # Поддержка докачки с места паузы
+            "--continue",
             "-f", format_str,
             "-o", output_template,
             "--progress-template", "%(progress.downloaded_bytes)s %(progress.total_bytes)s %(progress.percentage)s %(progress.speed)s %(progress.eta)s",
@@ -248,10 +244,9 @@ class DownloadManager:
         cmd.append(task.url)
 
         try:
-            # Получаем заголовок видео через JSON-вывод (всегда UTF-8)
             title_cmd = [
                 str(self.ytdlp_path),
-                "-j",  # JSON output
+                "-j",
                 "--no-playlist",
             ]
             title_cmd.extend(self._get_cookie_args(settings))
@@ -261,6 +256,7 @@ class DownloadManager:
                 *title_cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                **self._ytdlp_subprocess_kwargs(),
             )
             stdout, _ = await title_proc.communicate()
             if title_proc.returncode == 0:
@@ -268,19 +264,15 @@ class DownloadManager:
                     info = json.loads(stdout.decode("utf-8"))
                     task.title = info.get("title", task.url)
 
-                    # Получаем превью
                     task.thumbnail = info.get("thumbnail", "")
-                    # Если thumbnail нет, формируем из video_id
                     if not task.thumbnail:
                         video_id = info.get("id", "")
                         if video_id:
                             task.thumbnail = f"https://i.ytimg.com/vi/{video_id}/mqdefault.jpg"
 
-                    # Проверяем реальный формат видео
                     actual_ext = info.get("ext", "").lower()
                     desired_format = settings.download_format.lower()
 
-                    # Формат не совпадает с желаемым (не для mp3, так как mp3 конвертируется)
                     if desired_format != "mp3" and actual_ext and actual_ext != desired_format:
                         task.format_warning = t(
                             "notifications.format_mismatch",
@@ -296,13 +288,10 @@ class DownloadManager:
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                **self._ytdlp_subprocess_kwargs(),
             )
 
-            # Парсим прогресс
             while True:
-                # Если задача на паузе, мы просто ждем. 
-                # Благодаря psutil.suspend(), процесс yt-dlp замрет,
-                # и readline() ниже просто перестанет возвращать данные до возобновления.
                 if task.status == DownloadStatus.PAUSED:
                     await asyncio.sleep(1)
                     continue
@@ -313,7 +302,6 @@ class DownloadManager:
 
                 text = line.decode("utf-8", errors="replace").strip()
 
-                # Пытаемся распарсить прогресс
                 parts = text.split()
                 if len(parts) >= 5:
                     try:
@@ -322,7 +310,6 @@ class DownloadManager:
                         if task.total_bytes > 0:
                             task.progress = round((task.downloaded_bytes / task.total_bytes) * 100, 1)
                         
-                        # Форматируем скорость
                         try:
                             speed_val = float(parts[3])
                             if speed_val > 1024 * 1024:
@@ -334,7 +321,6 @@ class DownloadManager:
                         except:
                             task.speed = parts[3]
                             
-                        # Форматируем ETA
                         try:
                             eta_val = int(parts[4])
                             mm, ss = divmod(eta_val, 60)
@@ -365,7 +351,6 @@ class DownloadManager:
                 task.status = DownloadStatus.COMPLETED
                 task.progress = 100.0
 
-                # Сохраняем в историю
                 try:
                     history_manager.add_record(
                         url=task.url,
@@ -380,7 +365,6 @@ class DownloadManager:
                 except Exception as e:
                     print("Error saving history:", e)
 
-                # Авто-очистка: ждём 2 секунды чтобы пользователь увидел статус, затем удаляем
                 if settings.auto_clear_queue:
                     await asyncio.sleep(2)
                     self.tasks.pop(task.id, None)
@@ -465,12 +449,10 @@ class DownloadManager:
         """Возобновить загрузку."""
         task = self.tasks.get(task_id)
         if task and task.status == DownloadStatus.PAUSED:
-            # Проверяем, жив ли еще процесс
             if task.process and task.process.returncode is None:
                 task.status = DownloadStatus.DOWNLOADING
                 self._manage_process_tree(task.process.pid, "resume")
             else:
-                # Если процесс умер, перезапускаем как раньше
                 settings = load_settings()
                 task.status = DownloadStatus.DOWNLOADING
                 task.downloaded_bytes = 0
@@ -534,6 +516,7 @@ class DownloadManager:
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                **self._ytdlp_subprocess_kwargs(),
             )
             stdout, stderr = await proc.communicate()
 
@@ -554,7 +537,6 @@ class DownloadManager:
                         f"https://www.youtube.com/watch?v={video_id}" if video_id else ""
                     )
 
-                    # Форматируем длительность
                     duration_secs = info.get("duration") or 0
                     if duration_secs:
                         mins, secs = divmod(int(duration_secs), 60)
@@ -596,5 +578,4 @@ class DownloadManager:
         ))
 
 
-# Глобальный экземпляр
 download_manager = DownloadManager()
