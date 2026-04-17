@@ -30,6 +30,10 @@
 - 🍪 **Cookies** — three modes: disabled / .txt file / browser (Chrome, Firefox, Edge, Brave, Opera, Vivaldi)
 - 🌙 **Dark Theme** — one-click switching, synchronization across pages
 - 🎲 **Random Filename** — optional file anonymization
+- 🌍 **Multilingual** — support for English and Russian interfaces
+- 🔍 **Built-in Search** — search YouTube videos directly from the input bar (add `?` before your query)
+- 🔄 **Engine Updates** — quick yt-dlp updates right from the settings page
+- 🚫 **SponsorBlock** — optional skipping of sponsor segments in videos
 - 📊 **Storage Statistics** — display of free disk space and download folder size
 - ⚡ **Real-time Updates** — progress bar updates via WebSocket without page refresh
 
@@ -154,7 +158,9 @@ Settings are stored in `config.json` and edited via UI:
   "random_filename": false,     // use random filename
   "cookies_path": "",           // path to cookies.txt (Netscape format)
   "use_browser_cookies": false, // use browser cookies
-  "selected_browser": "chrome"  // chrome | firefox | edge | opera | brave | vivaldi
+  "selected_browser": "chrome", // chrome | firefox | edge | opera | brave | vivaldi
+  "enable_sponsorblock": false, // skip sponsor segments using SponsorBlock
+  "language": "en"              // interface language (en / ru)
 }
 ```
 

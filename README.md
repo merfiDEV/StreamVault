@@ -30,6 +30,10 @@
 - 🍪 **Cookies** — три режима: отключено / файл .txt / браузер (chrome, firefox, edge, brave, opera, vivaldi)
 - 🌙 **Тёмная тема** — переключение в один клик, синхронизация между страницами
 - 🎲 **Случайное имя файла** — опциональная анонимизация файлов
+- 🌍 **Мультиязычность** — поддержка русского и английского языков
+- 🔍 **Встроенный поиск** — поиск видео на YouTube прямо из строки ввода (добавьте `?` перед запросом)
+- 🔄 **Обновление движка** — быстрое обновление yt-dlp прямо из настроек
+- 🚫 **SponsorBlock** — автоматический пропуск или удаление спонсорских вставок
 - 📊 **Статистика хранилища** — отображение свободного места на диске и размера папки загрузок
 - ⚡ **Реальное время** — WebSocket обновления прогресса без перезагрузки страницы
 
@@ -154,7 +158,9 @@ ytdownloader/
   "random_filename": false,     // использовать случайное имя файла
   "cookies_path": "",           // путь к cookies.txt (Netscape формат)
   "use_browser_cookies": false, // использовать куки из браузера
-  "selected_browser": "chrome"  // chrome | firefox | edge | opera | brave | vivaldi
+  "selected_browser": "chrome", // chrome | firefox | edge | opera | brave | vivaldi
+  "enable_sponsorblock": false, // пропуск рекламных вставок SponsorBlock
+  "language": "ru"              // язык интерфейса (ru / en)
 }
 ```
 
@@ -164,14 +170,7 @@ ytdownloader/
 
 Распространяется под лицензией **MIT**. Подробнее см. [LICENSE](LICENSE).
 
----
 
-## 📦 Build to EXE
-
-```bash
-python build.py
-```
-The executable will be located in `dist/StreamVault.exe`.
 
 ---
 
