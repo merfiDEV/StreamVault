@@ -237,6 +237,27 @@ tailwind.config = {
     background-color: var(--surface-container-low) !important;
     transform: scale(1.01);
 }
+.empty-state-glow {
+    background:
+        radial-gradient(circle at top left, rgba(var(--primary-rgb), 0.12) 0%, transparent 42%),
+        radial-gradient(circle at bottom right, rgba(0, 113, 232, 0.10) 0%, transparent 38%),
+        linear-gradient(180deg, var(--surface-container-lowest) 0%, var(--surface-container-low) 100%);
+}
+.empty-state-chip {
+    position: relative;
+    overflow: hidden;
+}
+.empty-state-chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.08) 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.empty-state-chip:hover::before {
+    opacity: 1;
+}
 #hero-preview {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     max-height: 0;
@@ -503,10 +524,59 @@ tailwind.config = {
             </div>
             <div id="downloads-list" class="space-y-3">
                 <!-- Загрузки будут добавлены сюда динамически -->
-                <div id="empty-state" class="text-center py-12 text-on-secondary-container">
-                    <span class="material-symbols-outlined text-6xl mb-4 opacity-50">download</span>
-                    <p class="text-lg" data-i18n="main.no_downloads">Нет активных загрузок</p>
-                    <p class="text-sm mt-2" data-i18n="main.search_placeholder_hint">Начните с ? для поиска (например: ?Игры)</p>
+                <div id="empty-state" class="empty-state-glow relative overflow-hidden rounded-[2rem] border border-outline-variant/60 px-6 py-8 md:px-8 md:py-10 text-on-surface shadow-[0_24px_80px_rgba(20,20,20,0.08)]">
+                    <div class="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"></div>
+                    <div class="relative flex flex-col gap-6">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-primary/12 text-primary shadow-inner shadow-primary/10">
+                                <span class="material-symbols-outlined text-[34px]">download</span>
+                            </div>
+                            <p class="text-2xl font-headline font-extrabold tracking-tight text-on-surface" data-i18n="main.no_downloads">Нет активных загрузок</p>
+                            <p class="mt-2 max-w-xl text-sm leading-6 text-on-surface-variant" data-i18n="main.empty_state_subtitle">Вставьте ссылку, плейлист или поисковый запрос, и StreamVault сразу начнет работу.</p>
+                        </div>
+                        <div class="grid gap-3 md:grid-cols-3">
+                            <div class="rounded-[1.5rem] border border-outline-variant/60 bg-surface-container-lowest/80 p-4 text-left backdrop-blur-sm">
+                                <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                                    <span class="material-symbols-outlined text-[20px]">link</span>
+                                </div>
+                                <p class="font-headline text-sm font-bold text-on-surface" data-i18n="main.empty_state_mode_link_title">Одна ссылка</p>
+                                <p class="mt-1 text-sm leading-5 text-on-surface-variant" data-i18n="main.empty_state_mode_link_text">Для быстрого скачивания видео или Shorts без лишних шагов.</p>
+                            </div>
+                            <div class="rounded-[1.5rem] border border-outline-variant/60 bg-surface-container-lowest/80 p-4 text-left backdrop-blur-sm">
+                                <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-tertiary/10 text-tertiary">
+                                    <span class="material-symbols-outlined text-[20px]">queue_music</span>
+                                </div>
+                                <p class="font-headline text-sm font-bold text-on-surface" data-i18n="main.empty_state_mode_playlist_title">Плейлист</p>
+                                <p class="mt-1 text-sm leading-5 text-on-surface-variant" data-i18n="main.empty_state_mode_playlist_text">Откроется выбор роликов, чтобы скачать всё или только нужное.</p>
+                            </div>
+                            <div class="rounded-[1.5rem] border border-outline-variant/60 bg-surface-container-lowest/80 p-4 text-left backdrop-blur-sm">
+                                <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary-container text-on-secondary-container">
+                                    <span class="material-symbols-outlined text-[20px]">travel_explore</span>
+                                </div>
+                                <p class="font-headline text-sm font-bold text-on-surface" data-i18n="main.empty_state_mode_search_title">Поиск</p>
+                                <p class="mt-1 text-sm leading-5 text-on-surface-variant" data-i18n="main.empty_state_mode_search_text">Начните с ?, чтобы искать видео прямо внутри приложения.</p>
+                            </div>
+                        </div>
+                        <div class="rounded-[1.5rem] border border-dashed border-outline-variant/80 bg-surface-container-lowest/70 p-4">
+                            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold uppercase tracking-[0.22em] text-on-surface-variant" data-i18n="main.empty_state_try_title">Попробовать сейчас</p>
+                                    <p class="mt-1 text-sm text-on-surface-variant" data-i18n="main.empty_state_try_subtitle">Нажмите на пример, и он подставится в поле ввода.</p>
+                                </div>
+                                <div class="flex flex-wrap justify-center gap-2 md:justify-end">
+                                    <button type="button" class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary" data-fill="?lofi mix">
+                                        <span data-i18n="main.empty_state_chip_search">?lofi mix</span>
+                                    </button>
+                                    <button type="button" class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary" data-fill="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                                        <span data-i18n="main.empty_state_chip_video">Пример ссылки</span>
+                                    </button>
+                                    <button type="button" class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary" data-fill="https://www.youtube.com/playlist?list=PL">
+                                        <span data-i18n="main.empty_state_chip_playlist">Пример плейлиста</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -542,6 +612,14 @@ function createRipple(event, element) {
 
 document.querySelectorAll('.btn-ripple').forEach(btn => {
     btn.addEventListener('click', (e) => createRipple(e, btn));
+});
+
+document.querySelectorAll('.quick-fill-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        urlInput.value = btn.dataset.fill || '';
+        urlInput.focus();
+        urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
 });
 
 // --- i18n ---
