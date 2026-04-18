@@ -355,6 +355,60 @@ tailwind.config = {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* Premium Micro-interactions */
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+}
+
+.btn-glow:hover {
+    box-shadow: 0 8px 25px -5px rgba(var(--primary-rgb), 0.5);
+}
+
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple-animation 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.animate-reveal {
+    animation: reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes reveal {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-state {
+    background: #059669 !important; /* Green 600 */
+    box-shadow: 0 0 20px rgba(5, 150, 105, 0.4) !important;
+    transform: scale(1.02);
+}
 </style>
 </head>
 <body class="bg-background font-body text-on-background selection:bg-primary/20 selection:text-primary min-h-screen flex flex-col">
@@ -415,7 +469,7 @@ tailwind.config = {
 
         <!-- Dialog Footer -->
         <div class="p-6 border-t border-outline-variant flex justify-end">
-            <button id="playlist-download-btn" class="signature-gradient text-on-primary px-8 py-3 rounded-full font-headline font-bold hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="playlist-download-btn" class="signature-gradient text-on-primary px-8 py-3 rounded-full font-headline font-bold hover-lift btn-glow btn-ripple active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed">
                 <!-- Translated by JS -->
             </button>
         </div>
@@ -436,7 +490,7 @@ tailwind.config = {
                 <span class="material-symbols-outlined text-primary">link</span>
                 <input id="url-input" class="w-full bg-transparent border-none focus:ring-0 text-xl font-body text-on-surface placeholder:text-on-secondary-container" data-i18n-placeholder="main.url_placeholder" placeholder="Вставьте URL или ?запрос для поиска..." type="text"/>
             </div>
-            <button id="download-btn" class="signature-gradient text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="main.download_btn">
+            <button id="download-btn" class="signature-gradient text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover-lift btn-glow btn-ripple active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="main.download_btn">
                 Скачать
             </button>
         </div>
@@ -466,6 +520,29 @@ const urlInput = document.getElementById('url-input');
 const downloadBtn = document.getElementById('download-btn');
 const activeCount = document.getElementById('active-count');
 const emptyState = document.getElementById('empty-state');
+
+// --- Ripple Effect ---
+function createRipple(event, element) {
+    const circle = document.createElement('span');
+    const diameter = Math.max(element.clientWidth, element.clientHeight);
+    const radius = diameter / 2;
+
+    const rect = element.getBoundingClientRect();
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - rect.left - radius}px`;
+    circle.style.top = `${event.clientY - rect.top - radius}px`;
+    circle.classList.add('ripple');
+
+    const ripple = element.getElementsByClassName('ripple')[0];
+    if (ripple) {
+        ripple.remove();
+    }
+    element.appendChild(circle);
+}
+
+document.querySelectorAll('.btn-ripple').forEach(btn => {
+    btn.addEventListener('click', (e) => createRipple(e, btn));
+});
 
 // --- i18n ---
 let translations = {};
@@ -861,10 +938,31 @@ async function startDownload(url) {
         if (response.ok) {
             urlInput.value = '';
             clearHeroPreview();
+            showSuccessState();
         }
     } catch (err) {
         console.error('Ошибка при загрузке:', err);
     }
+}
+
+function showSuccessState() {
+    const originalContent = downloadBtn.innerHTML;
+    const originalClasses = downloadBtn.className;
+    
+    downloadBtn.classList.add('success-state');
+    downloadBtn.innerHTML = `
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span data-i18n="status.completed">${t('status.completed')}</span>
+        </div>
+    `;
+
+    setTimeout(() => {
+        downloadBtn.classList.remove('success-state');
+        downloadBtn.innerHTML = originalContent;
+        // Re-apply translation if needed
+        applyTranslations();
+    }, 2000);
 }
 
 // --- Hero Preview Logic ---
@@ -1112,16 +1210,19 @@ document.getElementById('playlist-download-btn').addEventListener('click', async
 });
 
 // Ренер списка загрузок
+const renderedTaskIds = new Set();
+
 function renderDownloads(tasks) {
     if (tasks.length === 0) {
         emptyState.style.display = 'block';
         downloadsList.innerHTML = '';
         downloadsList.appendChild(emptyState);
+        renderedTaskIds.clear();
         return;
     }
     
     emptyState.style.display = 'none';
-    downloadsList.innerHTML = tasks.map(task => {
+    const html = tasks.map((task, index) => {
         const isDownloading = task.status === 'downloading';
         const isProcessing = task.status === 'processing';
         const isError = task.status === 'error';
@@ -1139,8 +1240,11 @@ function renderDownloads(tasks) {
         const showActions = showActionButtons(task.status);
         const canOpenFile = isCompleted && task.file_path;
         
+        const isNew = !renderedTaskIds.has(task.id);
+        if (isNew) renderedTaskIds.add(task.id);
+
         return `
-        <div class="live-card bg-surface-container-low p-5 rounded-[2rem] flex flex-col sm:flex-row gap-5 ${isDownloading || isProcessing ? 'active' : ''} ${isCompleted ? 'opacity-75' : ''}">
+        <div class="live-card bg-surface-container-low p-5 rounded-[2rem] flex flex-col sm:flex-row gap-5 ${isDownloading || isProcessing ? 'active' : ''} ${isCompleted ? 'opacity-75' : ''} ${isNew ? 'animate-reveal' : ''}" style="${isNew ? `--delay: ${index * 0.1}s` : ''}">
             <!-- Thumbnail with pulse effect if active -->
             <div class="relative shrink-0 flex items-center justify-center">
                 <img src="${task.thumbnail || 'https://i.ytimg.com/vi/placeholder/mqdefault.jpg'}" 
@@ -1227,6 +1331,13 @@ function renderDownloads(tasks) {
         </div>
         `;
     }).join('');
+
+    // To prevent layout shift when updating progress, 
+    // we only replace the entire list if the number of tasks changed 
+    // or if there's a new task.
+    // However, for simplicity and since it's a small list, 
+    // we'll just update it. The reveal animation is only added to NEW elements.
+    downloadsList.innerHTML = html;
 }
 
 function getStatusText(status) {
