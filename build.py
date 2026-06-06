@@ -1,4 +1,4 @@
-"""Build StreamVault as onedir and package a ZIP release asset."""
+"""Build StreamVault for release packaging."""
 
 import os
 import shutil
@@ -7,27 +7,27 @@ import sys
 from pathlib import Path
 
 
-def build():
-    root = Path(__file__).parent
-    venv_python = root / ".venv" / "Scripts" / "python.exe"
-    if venv_python.exists() and Path(sys.executable).resolve() != venv_python.resolve():
-        print(f"Перезапускаю сборку через виртуальное окружение: {venv_python}")
-        subprocess.check_call([str(venv_python), str(Path(__file__).resolve())])
-        return
+def _venv_python(root: Path) -> Path:
+    return root / ".venv" / "Scripts" / "python.exe"
 
+
+def _reexec_in_venv(root: Path) -> None:
+    venv_python = _venv_python(root)
+    if venv_python.exists() and Path(sys.executable).resolve() != venv_python.resolve():
+        print(f"Restarting build through virtual environment: {venv_python}")
+        subprocess.check_call([str(venv_python), str(Path(__file__).resolve())])
+        raise SystemExit(0)
+
+
+def _ensure_pyinstaller() -> None:
     try:
         import PyInstaller  # noqa: F401
     except ImportError:
-        print("PyInstaller не установлен. Устанавливаю...")
+        print("PyInstaller is not installed. Installing...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
 
-    dist = root / "dist"
 
-    icon_path = root / ".assets" / "favicon.jpg"
-    icon_arg = []
-    if icon_path.exists():
-        icon_arg = [f"--icon={str(icon_path)}"]
-
+def _hidden_import_args() -> list[str]:
     hidden_packages = [
         "uvicorn",
         "fastapi",
@@ -38,53 +38,92 @@ def build():
         "webview",
     ]
 
-    hidden_args = []
+    hidden_args: list[str] = []
     try:
         from PyInstaller.utils.hooks import collect_submodules
 
         for pkg in hidden_packages:
-            hidden_args.extend([f"--collect-submodules={pkg}"])
+            hidden_args.append(f"--collect-submodules={pkg}")
             for mod in collect_submodules(pkg):
                 if mod != pkg:
-                    hidden_args.extend([f"--hidden-import={mod}"])
+                    hidden_args.append(f"--hidden-import={mod}")
     except Exception:
         for pkg in hidden_packages:
-            hidden_args.extend([f"--hidden-import={pkg}"])
+            hidden_args.append(f"--hidden-import={pkg}")
 
-    cmd = [
-        sys.executable,
-        "-m",
-        "PyInstaller",
-        "--onedir",
-        "--noconsole",
-        "--name=StreamVault",
-        "--clean",
+    return hidden_args
+
+
+def _build(mode: str) -> None:
+    root = Path(__file__).parent
+    dist = root / "dist"
+    build_dir = root / "build"
+
+    icon_path = root / ".assets" / "favicon.jpg"
+    icon_arg = [f"--icon={str(icon_path)}"] if icon_path.exists() else []
+
+    common_args = [
         f"--add-data={str(root / 'ui')};ui",
         f"--add-data={str(root / 'locales')};locales",
         f"--add-data={str(root / 'yt-dlp.exe')};.",
         *icon_arg,
-        *hidden_args,
-        "main.py",
+        *_hidden_import_args(),
     ]
 
-    print("Начинаю сборку...")
-    print(f"Команда: {' '.join(cmd)}")
+    if mode == "onedir":
+        cmd = [
+            sys.executable,
+            "-m",
+            "PyInstaller",
+            "--onedir",
+            "--noconsole",
+            "--name=StreamVault",
+            "--clean",
+            *common_args,
+            "main.py",
+        ]
+    elif mode == "onefile":
+        cmd = [
+            sys.executable,
+            "-m",
+            "PyInstaller",
+            "--onefile",
+            "--noconsole",
+            "--name=StreamVault",
+            "--clean",
+            *common_args,
+            "main.py",
+        ]
+    else:
+        raise ValueError(f"Unsupported BUILD_MODE: {mode}")
 
-    try:
-        subprocess.check_call(cmd)
+    print(f"Building mode: {mode}")
+    print(f"Command: {' '.join(cmd)}")
+    subprocess.check_call(cmd)
+
+    if mode == "onedir":
         bundle_dir = dist / "StreamVault"
-        archive_path = Path(
-            shutil.make_archive(str(dist / "StreamVault"), "zip", root_dir=dist, base_dir="StreamVault")
-        )
+        archive_path = Path(shutil.make_archive(str(dist / "StreamVault"), "zip", root_dir=dist, base_dir="StreamVault"))
         print("\n" + "=" * 50)
-        print("СБОРКА ЗАВЕРШЕНА УСПЕШНО!")
-        print(f"Папка приложения: {bundle_dir}")
-        print(f"ZIP для релиза: {archive_path}")
+        print("ONEDIR BUILD COMPLETE")
+        print(f"Bundle folder: {bundle_dir}")
+        print(f"Release ZIP: {archive_path}")
         print("=" * 50)
-    except subprocess.CalledProcessError as e:
-        print(f"\nОшибка при сборке: {e}")
-        sys.exit(1)
+    else:
+        exe_path = dist / "StreamVault.exe"
+        print("\n" + "=" * 50)
+        print("ONEFILE BUILD COMPLETE")
+        print(f"Legacy EXE: {exe_path}")
+        print("=" * 50)
+
+
+def main() -> None:
+    root = Path(__file__).parent
+    _reexec_in_venv(root)
+    _ensure_pyinstaller()
+    mode = os.environ.get("BUILD_MODE", "onedir").strip().lower()
+    _build(mode)
 
 
 if __name__ == "__main__":
-    build()
+    main()

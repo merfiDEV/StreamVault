@@ -37,8 +37,15 @@ jobs:
         PYTHONPATH: .
       run: python -m pytest tests/
 
-    - name: Build Executable
-      run: python build.py
+    - name: Build Onedir Release
+      run: |
+        $env:BUILD_MODE = "onedir"
+        python build.py
+
+    - name: Build Legacy Onefile Release
+      run: |
+        $env:BUILD_MODE = "onefile"
+        python build.py
 
     - name: Bump version and push tag
       id: tag_version
@@ -56,6 +63,8 @@ jobs:
         tag_name: ${{ steps.tag_version.outputs.new_tag }}
         name: Release ${{ steps.tag_version.outputs.new_tag }}
         body: ${{ steps.tag_version.outputs.changelog }}
-        files: dist/StreamVault.zip
+        files: |
+          dist/StreamVault.zip
+          dist/StreamVault.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
