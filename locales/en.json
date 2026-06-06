@@ -1,7 +1,7 @@
 {
   "common": {
     "app_name": "StreamVault",
-    "app_subtitle": "VOID",
+    "app_subtitle": "StreamVault",
     "version": "v1.0.0",
     "version_footer": "Made for video enthusiasts",
     "close_app": "Close application",
@@ -79,6 +79,7 @@
     "format_mp3": "MP3 (audio)",
     "save_path_label": "Save location",
     "save_location_picker_title": "Choose save location",
+    "save_location_browse": "Browse",
     "random_filename_label": "Random filename",
     "random_filename_desc": "Instead of the original video title",
     "concurrent_label": "Concurrent downloads",
@@ -120,7 +121,8 @@
     "ytdlp_label": "yt-dlp",
     "ytdlp_check": "Check",
     "ytdlp_update": "Update",
-    "ytdlp_update_available": "yt-dlp update available"
+    "ytdlp_update_available": "yt-dlp update available",
+    "ytdlp_updating": "Updating..."
   },
   "history": {
     "page_title": "History",
@@ -150,9 +152,22 @@
     "format_mismatch": "Format {actual} instead of {desired}",
     "url_copied": "URL copied",
     "settings_saved": "Settings saved",
+    "settings_save_failed": "Could not save settings",
+    "folder_picker_unavailable": "Folder selection is unavailable in this mode",
+    "folder_picker_failed": "Could not open the folder picker",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "apply_changes": "Press Save to apply the changes",
     "invalid_youtube_url": "Please paste a valid YouTube video or playlist URL."
     ,
-    "log_copied": "Log copied"
+    "log_copied": "Log copied",
+    "ytdlp_updating": "Checking and updating yt-dlp...",
+    "ytdlp_up_to_date": "yt-dlp is already up to date (v{version})",
+    "ytdlp_update_available": "yt-dlp update available: {current} → {latest}",
+    "ytdlp_updated": "yt-dlp updated to {version}",
+    "ytdlp_check_failed": "Could not check yt-dlp version",
+    "ytdlp_update_failed": "Could not update yt-dlp",
+    "ytdlp_status_unknown": "Could not retrieve yt-dlp version information"
   },
   "languages": {
     "ru": "Русский",

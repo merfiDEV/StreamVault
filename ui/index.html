@@ -659,7 +659,7 @@
     <header class="w-full flex justify-between items-center px-6 py-4">
         <div class="flex items-center gap-2">
             <span class="text-primary font-headline font-800 text-2xl tracking-tighter"
-                data-i18n="common.app_subtitle">VOID</span>
+                data-i18n="common.app_subtitle">StreamVault</span>
         </div>
         <div class="flex items-center gap-2">
             <button id="theme-toggle"
@@ -1621,7 +1621,7 @@
 
         // Ренер списка загрузок
         const renderedTaskIds = new Set();
-        const completedTaskIds = new Set();
+        const taskStatuses = new Map();
 
         function renderDownloads(tasks) {
             if (tasks.length === 0) {
@@ -1629,11 +1629,12 @@
                 downloadsList.innerHTML = '';
                 downloadsList.appendChild(emptyState);
                 renderedTaskIds.clear();
-                completedTaskIds.clear();
+                taskStatuses.clear();
                 return;
             }
 
             emptyState.style.display = 'none';
+            const currentTaskIds = new Set(tasks.map(task => task.id));
             const html = tasks.map((task, index) => {
                 const isDownloading = task.status === 'downloading';
                 const isProcessing = task.status === 'processing';
@@ -1655,8 +1656,9 @@
                 const isNew = !renderedTaskIds.has(task.id);
                 if (isNew) renderedTaskIds.add(task.id);
 
-                const isNewCompleted = isCompleted && !completedTaskIds.has(task.id);
-                if (isNewCompleted) completedTaskIds.add(task.id);
+                const previousStatus = taskStatuses.get(task.id);
+                const isNewCompleted = isCompleted && previousStatus && previousStatus !== 'completed';
+                taskStatuses.set(task.id, task.status);
 
                 return `
         <div class="live-card bg-surface-container-low p-5 rounded-[2rem] flex flex-col sm:flex-row gap-5 ${isDownloading || isProcessing ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isNew ? 'animate-reveal' : ''} ${isNewCompleted ? 'just-completed' : ''}" style="${isNew ? `--delay: ${index * 0.1}s` : ''}">
@@ -1746,6 +1748,17 @@
         </div>
         `;
             }).join('');
+
+            for (const taskId of taskStatuses.keys()) {
+                if (!currentTaskIds.has(taskId)) {
+                    taskStatuses.delete(taskId);
+                }
+            }
+            for (const taskId of renderedTaskIds.keys()) {
+                if (!currentTaskIds.has(taskId)) {
+                    renderedTaskIds.delete(taskId);
+                }
+            }
 
             // To prevent layout shift when updating progress, 
             // we only replace the entire list if the number of tasks changed 

@@ -1,7 +1,7 @@
 {
   "common": {
     "app_name": "StreamVault",
-    "app_subtitle": "VOID",
+    "app_subtitle": "StreamVault",
     "version": "v1.0.0",
     "version_footer": "Создано для любителей видео",
     "close_app": "Закрыть приложение",
@@ -79,6 +79,7 @@
     "format_mp3": "MP3 (аудио)",
     "save_path_label": "Путь сохранения",
     "save_location_picker_title": "Выберите путь сохранения",
+    "save_location_browse": "Обзор",
     "random_filename_label": "Случайное имя файла",
     "random_filename_desc": "Вместо оригинального названия видео",
     "concurrent_label": "Параллельные загрузки",
@@ -120,7 +121,8 @@
     "ytdlp_label": "yt-dlp",
     "ytdlp_check": "Проверить",
     "ytdlp_update": "Обновить",
-    "ytdlp_update_available": "Доступно обновление yt-dlp"
+    "ytdlp_update_available": "Доступно обновление yt-dlp",
+    "ytdlp_updating": "Обновление..."
   },
   "history": {
     "page_title": "История",
@@ -150,9 +152,22 @@
     "format_mismatch": "Формат {actual} вместо {desired}",
     "url_copied": "URL скопирован",
     "settings_saved": "Настройки сохранены",
+    "settings_save_failed": "Не удалось сохранить настройки",
+    "folder_picker_unavailable": "Выбор папки недоступен в этом режиме",
+    "folder_picker_failed": "Не удалось открыть выбор папки",
+    "enabled": "Включено",
+    "disabled": "Отключено",
+    "apply_changes": "Нажмите «Сохранить», чтобы применить изменения",
     "invalid_youtube_url": "Пожалуйста, вставьте корректную ссылку на YouTube видео или плейлист."
     ,
-    "log_copied": "Лог скопирован"
+    "log_copied": "Лог скопирован",
+    "ytdlp_updating": "Проверка и обновление yt-dlp...",
+    "ytdlp_up_to_date": "yt-dlp уже актуален (v{version})",
+    "ytdlp_update_available": "Доступно обновление yt-dlp: {current} → {latest}",
+    "ytdlp_updated": "yt-dlp обновлён до {version}",
+    "ytdlp_check_failed": "Не удалось проверить версию yt-dlp",
+    "ytdlp_update_failed": "Не удалось обновить yt-dlp",
+    "ytdlp_status_unknown": "Не удалось получить информацию о версии yt-dlp"
   },
   "languages": {
     "ru": "Русский",
