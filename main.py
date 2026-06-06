@@ -354,6 +354,73 @@ def _spawn_update_installer(source_dir: Path) -> None:
     )
 
 
+def _spawn_onefile_update_installer(source_file: Path) -> None:
+    if not getattr(sys, "frozen", False):
+        raise RuntimeError("Автообновление поддерживается только в EXE-сборке.")
+
+    target_file = Path(sys.executable)
+    updates_dir = _update_workspace()
+    updates_dir.mkdir(parents=True, exist_ok=True)
+
+    updater_script = updates_dir / "apply_update_onefile.cmd"
+    updater_script.write_text(
+        dedent(
+            r"""
+            @echo off
+            setlocal enabledelayedexpansion
+
+            set "PID=%~1"
+            set "SOURCE=%~2"
+            set "TARGET=%~3"
+            set "BACKUP=%TARGET%.bak"
+            set "IMAGENAME=%~nx3"
+
+            :wait_loop
+            tasklist /FI "PID eq %PID%" /NH | findstr /I /C:"%PID%" >nul
+            if %errorlevel%==0 (
+                timeout /t 1 /nobreak >nul
+                goto wait_loop
+            )
+
+            copy /Y "%TARGET%" "%BACKUP%" >nul 2>&1
+            copy /Y "%SOURCE%" "%TARGET%" >nul
+            if errorlevel 1 goto restore_old
+
+            start "" "%TARGET%"
+
+            timeout /t 15 /nobreak >nul
+            tasklist /FI "IMAGENAME eq !IMAGENAME!" /NH | findstr /I /C:"!IMAGENAME!" >nul
+            if errorlevel 1 goto restore_old
+
+            del /Q "%BACKUP%" >nul 2>&1
+            exit /b 0
+
+            :restore_old
+            copy /Y "%BACKUP%" "%TARGET%" >nul 2>&1
+            start "" "%TARGET%"
+            exit /b 1
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+    subprocess.Popen(
+        [
+            "cmd.exe",
+            "/c",
+            str(updater_script),
+            str(os.getpid()),
+            str(source_file),
+            str(target_file),
+        ],
+        **kwargs,
+    )
+
+
 def _download_latest_app_release() -> dict:
     if not getattr(sys, "frozen", False):
         return _build_update_error(
@@ -423,14 +490,18 @@ def _download_latest_app_release() -> dict:
 
     try:
         archive_path, attempts = _download_release_asset(release)
-        extracted_dir = _extract_release_archive(archive_path, release.get("version") or "")
-        _spawn_update_installer(extracted_dir)
+        if install_mode == "onedir":
+            extracted_dir = _extract_release_archive(archive_path, release.get("version") or "")
+            _spawn_update_installer(extracted_dir)
+        else:
+            extracted_dir = None
+            _spawn_onefile_update_installer(archive_path)
         return {
             "status": "scheduled",
             "current": APP_VERSION,
             **release,
             "downloaded_to": str(archive_path),
-            "extracted_to": str(extracted_dir),
+            "extracted_to": str(extracted_dir) if extracted_dir else "",
             "target": str(_install_root()),
             "install_mode": install_mode,
             "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
