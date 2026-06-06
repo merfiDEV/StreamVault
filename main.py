@@ -553,6 +553,18 @@ def run_desktop():
             for window in webview.windows:
                 window.destroy()
 
+        def choose_folder(self, current_path: str = ""):
+            """Открыть системный диалог выбора папки и вернуть путь."""
+            try:
+                initial_dir = current_path if current_path and Path(current_path).exists() else None
+                for window in webview.windows:
+                    result = window.create_file_dialog(webview.FOLDER_DIALOG, directory=initial_dir)
+                    if result:
+                        return str(result[0])
+            except Exception:
+                return ""
+            return ""
+
     # Запускаем сервер в отдельном потоке
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()

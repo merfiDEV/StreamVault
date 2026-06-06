@@ -160,6 +160,24 @@ h1, h2, h3 {
 *::-webkit-scrollbar-thumb:hover {
     background: var(--outline);
 }
+
+@keyframes slide-in {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-out {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(12px); opacity: 0; }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.28s ease-out;
+}
+
+.animate-slide-out {
+    animation: slide-out 0.22s ease-in forwards;
+}
 </style>
 <script id="tailwind-config">
 tailwind.config = {
@@ -232,6 +250,7 @@ tailwind.config = {
 </script>
 </head>
 <body class="bg-surface text-on-surface min-h-screen">
+<div id="toast-container" class="fixed bottom-6 left-6 z-50 flex flex-col gap-3 max-w-sm"></div>
 <!-- TopNavBar -->
 <header class="w-full sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_12px_32px_rgba(26,28,28,0.06)] flex justify-between items-center px-6 py-4">
     <div class="flex items-center gap-4">
@@ -644,7 +663,13 @@ tailwind.config = {
 <div id="location-dialog" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
     <div class="bg-surface-container-lowest p-6 rounded-2xl max-w-md w-full mx-4">
         <h3 class="text-lg font-bold text-on-surface mb-4" data-i18n="settings.save_location_picker_title">Выберите путь сохранения</h3>
-        <input id="location-input" type="text" class="w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\Users\Name\Videos"/>
+        <div class="flex gap-2 items-center">
+            <input id="location-input" type="text" class="flex-1 w-full bg-surface-container px-4 py-3 rounded-xl border border-outline focus:ring-2 focus:ring-primary focus:border-primary text-on-surface" placeholder="C:\Users\Name\Videos"/>
+            <button id="browse-location" class="shrink-0 px-4 py-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">folder_open</span>
+                <span data-i18n="settings.save_location_browse">Обзор</span>
+            </button>
+        </div>
         <div class="flex justify-end gap-3 mt-4">
             <button id="cancel-location" class="px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors" data-i18n="common.cancel">Отмена</button>
             <button id="save-location" class="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary/90 transition-colors" data-i18n="common.save">Сохранить</button>
@@ -728,6 +753,51 @@ function t(key, params = {}) {
     }
     if (typeof val !== 'string') return key;
     return val.replace(/\{(\w+)\}/g, (_, p) => params[p] ?? `{${p}}`);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showToast(message, title = '', type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    const palette = {
+        success: { icon: 'check_circle', accent: 'text-emerald-500' },
+        warning: { icon: 'warning', accent: 'text-amber-500' },
+        error: { icon: 'error', accent: 'text-red-500' },
+        info: { icon: 'info', accent: 'text-primary' },
+    };
+    const tone = palette[type] || palette.info;
+    const titleHtml = title ? `<p class="text-sm font-semibold text-on-surface truncate">${escapeHtml(title)}</p>` : '';
+
+    toast.className = 'bg-surface-container-low border border-outline-variant rounded-xl p-4 shadow-lg flex flex-col gap-2 animate-slide-in';
+    toast.innerHTML = `
+        <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined ${tone.accent} text-[22px] shrink-0 mt-0.5">${tone.icon}</span>
+            <div class="flex-1 min-w-0">
+                ${titleHtml}
+                <p class="text-sm text-on-surface-variant">${escapeHtml(message)}</p>
+            </div>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-on-surface-variant hover:text-on-surface shrink-0">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('animate-slide-out');
+        setTimeout(() => toast.remove(), 260);
+    }, 4500);
+}
+
+function showDraftSettingToast(title, value) {
+    showToast(`${value}. ${t('notifications.apply_changes')}`, title, 'info');
 }
 
 function applyTranslations() {
@@ -993,8 +1063,10 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         });
         currentSettings = newSettings;
         applySettings(newSettings);
+        showToast(t('notifications.settings_saved'), t('settings.section_downloads'), 'success');
     } catch (err) {
         console.error('Ошибка сохранения:', err);
+        showToast(t('notifications.settings_save_failed'), t('settings.section_downloads'), 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Сохранить';
@@ -1006,6 +1078,24 @@ document.getElementById('edit-location-btn').addEventListener('click', () => {
     document.getElementById('location-input').value = currentSettings.save_location;
     document.getElementById('location-dialog').classList.remove('hidden');
     document.getElementById('location-dialog').classList.add('flex');
+});
+
+document.getElementById('browse-location')?.addEventListener('click', async () => {
+    const current = document.getElementById('location-input')?.value?.trim() || currentSettings?.save_location || '';
+    if (!window.pywebview?.api?.choose_folder) {
+        showToast(t('notifications.folder_picker_unavailable'), t('settings.save_location_picker_title'), 'error');
+        return;
+    }
+    try {
+        const selected = await window.pywebview.api.choose_folder(current);
+        if (selected) {
+            document.getElementById('location-input').value = selected;
+            showToast(`${selected}. ${t('notifications.apply_changes')}`, t('settings.save_location_picker_title'), 'success');
+        }
+    } catch (err) {
+        console.error('Folder picker error:', err);
+        showToast(t('notifications.folder_picker_failed'), t('settings.save_location_picker_title'), 'error');
+    }
 });
 
 document.getElementById('cancel-location').addEventListener('click', () => {
@@ -1020,6 +1110,7 @@ document.getElementById('save-location').addEventListener('click', async () => {
         newLocation = newLocation.replace(/^["']|["']$/g, '');
         currentSettings.save_location = newLocation;
         document.getElementById('save-location-text').textContent = newLocation;
+        showToast(`${newLocation}. ${t('notifications.apply_changes')}`, t('settings.save_location_picker_title'), 'info');
     }
     document.getElementById('location-dialog').classList.add('hidden');
     document.getElementById('location-dialog').classList.remove('flex');
@@ -1050,14 +1141,17 @@ document.getElementById('save-cookies').addEventListener('click', () => {
 
 setupDropdown('quality-dropdown-btn', 'quality-menu', 'quality-option', 'quality-selected', (value) => {
     qualityValue = value;
+    showDraftSettingToast(t('settings.quality_label'), value === 'best' ? t('settings.quality_best') : value);
 });
 
 setupDropdown('format-dropdown-btn', 'format-menu', 'format-option', 'format-selected', (value) => {
     formatValue = value;
+    showDraftSettingToast(t('settings.format_label'), value.toUpperCase());
 });
 
 setupDropdown('browser-dropdown-btn', 'browser-menu', 'browser-option', 'browser-selected', (value) => {
     browserValue = value;
+    showDraftSettingToast(t('settings.browser_label'), value.charAt(0).toUpperCase() + value.slice(1));
 });
 
 // Toggle cookie source (3 режима: none / file / browser)
@@ -1192,6 +1286,18 @@ document.getElementById('concurrent-slider')?.addEventListener('input', (e) => {
     if (label) label.textContent = String(concurrentValue);
 });
 
+document.getElementById('concurrent-slider')?.addEventListener('change', () => {
+    showToast(`${concurrentValue}. ${t('notifications.apply_changes')}`, t('settings.concurrent_label'), 'info');
+});
+
+document.getElementById('random-filename-toggle')?.addEventListener('change', (e) => {
+    showToast(
+        e.target.checked ? t('notifications.enabled') : t('notifications.disabled'),
+        t('settings.random_filename_label'),
+        e.target.checked ? 'success' : 'warning'
+    );
+});
+
 // Загрузка реальных данных хранилища
 async function updateStorageUsage() {
     try {
@@ -1213,57 +1319,85 @@ async function updateStorageUsage() {
 
 updateStorageUsage();
 
-async function refreshYtDlpInfo() {
+function setYtDlpStatus(data) {
+    const el = document.getElementById('ytdlp-version');
+    const hint = document.getElementById('ytdlp-hint');
+    const current = data?.current || '—';
+    const latest = data?.latest || '—';
+
+    if (el) el.textContent = `Current: ${current} • Latest: ${latest}`;
+
+    if (!hint) return;
+
+    hint.classList.remove('text-primary', 'text-emerald-500', 'text-error');
+    hint.classList.add('text-on-surface-variant');
+
+    if (data?.current && data?.latest && data.current === data.latest) {
+        hint.textContent = t('notifications.ytdlp_up_to_date', { version: data.current });
+        hint.classList.remove('text-on-surface-variant');
+        hint.classList.add('text-emerald-500');
+    } else if (data?.current && data?.latest) {
+        hint.textContent = t('settings.ytdlp_update_available');
+        hint.classList.remove('text-on-surface-variant');
+        hint.classList.add('text-primary');
+    } else {
+        hint.textContent = '';
+    }
+}
+
+async function refreshYtDlpInfo({ notify = false } = {}) {
     try {
         const res = await fetch(`${API_URL}/api/ytdlp/info`);
         const data = await res.json();
-        const el = document.getElementById('ytdlp-version');
-        const hint = document.getElementById('ytdlp-hint');
-        if (el) el.textContent = `Current: ${data.current || '—'} • Latest: ${data.latest || '—'}`;
-        if (hint) hint.textContent = data.latest && data.current && data.latest !== data.current ? t('settings.ytdlp_update_available') : '';
-    } catch {}
+        setYtDlpStatus(data);
+
+        if (notify) {
+            if (data?.current && data?.latest && data.current === data.latest) {
+                showToast(t('notifications.ytdlp_up_to_date', { version: data.current }), t('settings.ytdlp_label'), 'success');
+            } else if (data?.current && data?.latest) {
+                showToast(t('notifications.ytdlp_update_available', { current: data.current, latest: data.latest }), t('settings.ytdlp_label'), 'warning');
+            } else {
+                showToast(t('notifications.ytdlp_status_unknown'), t('settings.ytdlp_label'), 'info');
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка проверки yt-dlp:', err);
+        showToast(t('notifications.ytdlp_check_failed'), t('settings.ytdlp_label'), 'error');
+    }
 }
 
 document.getElementById('ytdlp-check')?.addEventListener('click', async () => {
-    await refreshYtDlpInfo();
+    await refreshYtDlpInfo({ notify: true });
 });
 
 document.getElementById('ytdlp-update')?.addEventListener('click', async () => {
     const btn = document.getElementById('ytdlp-update');
-    const hint = document.getElementById('ytdlp-hint');
     if (btn) {
         btn.disabled = true;
         btn.dataset.originalText = btn.textContent;
-        btn.textContent = t('settings.ytdlp_updating') === 'settings.ytdlp_updating' ? 'Обновление...' : t('settings.ytdlp_updating');
+        btn.textContent = t('settings.ytdlp_updating');
     }
-    if (hint) {
-        hint.textContent = 'Установка обновления, пожалуйста подождите...';
-        hint.classList.remove('text-on-surface-variant');
-        hint.classList.add('text-primary');
-    }
+
+    showToast(t('notifications.ytdlp_updating'), t('settings.ytdlp_label'), 'info');
+
     try {
         const res = await fetch(`${API_URL}/api/ytdlp/update`, { method: 'POST' });
         const data = await res.json();
+
         if (data?.error) {
-            alert(data.error);
-            if (hint) hint.textContent = '';
+            showToast(data.error, t('settings.ytdlp_label'), 'error');
         } else {
-            if (hint) {
-                hint.textContent = 'yt-dlp успешно обновлен!';
-                setTimeout(() => {
-                    hint.classList.remove('text-primary');
-                    hint.classList.add('text-on-surface-variant');
-                }, 3000);
-            }
+            showToast(t('notifications.ytdlp_updated', { version: data.current || '—' }), t('settings.ytdlp_label'), 'success');
+            await refreshYtDlpInfo();
         }
-        await refreshYtDlpInfo();
-    } catch {
-        alert('Ошибка сети при обновлении yt-dlp');
-        if (hint) hint.textContent = '';
+    } catch (err) {
+        console.error('Ошибка обновления yt-dlp:', err);
+        showToast(t('notifications.ytdlp_update_failed'), t('settings.ytdlp_label'), 'error');
     }
+
     if (btn) {
         btn.disabled = false;
-        btn.textContent = btn.dataset.originalText;
+        btn.textContent = btn.dataset.originalText || t('settings.ytdlp_update');
     }
 });
 
@@ -1279,6 +1413,11 @@ document.getElementById('sponsorblock-toggle')?.addEventListener('change', (e) =
             warning.classList.add('hidden');
         }
     }
+    showToast(
+        e.target.checked ? t('notifications.enabled') : t('notifications.disabled'),
+        t('settings.sponsorblock_label'),
+        e.target.checked ? 'success' : 'warning'
+    );
 });
 
 // Закрытие приложения

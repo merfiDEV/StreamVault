@@ -1,9 +1,7 @@
 """Скрипт для сборки StreamVault в один EXE файл."""
 
-import os
 import subprocess
 import sys
-import shutil
 from pathlib import Path
 
 def build():
@@ -34,10 +32,13 @@ def build():
     # Разделитель для --add-data в Windows это ';'
     
     cmd = [
-        "pyinstaller",
+        sys.executable,
+        "-m",
+        "PyInstaller",
         "--onefile",
         "--noconsole",
         "--name=StreamVault",
+        "--clean",
         f"--add-data={str(root / 'ui')};ui",
         f"--add-data={str(root / 'locales')};locales",
         f"--add-data={str(root / 'yt-dlp.exe')};.",
