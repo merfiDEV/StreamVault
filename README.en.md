@@ -166,6 +166,24 @@ Settings are stored in `config.json` and edited via UI:
 
 ---
 
+## 🆕 Recent Improvements
+
+- shared JavaScript for all pages now lives in `ui/js/shared.js`
+- notifications and errors now go through a single toast helper
+- localization is stricter: visible UI text comes from translations only
+- the save path dialog now includes a system folder picker
+- the `exe` build is produced via `build.py` and placed in `dist/StreamVault.exe`
+
+---
+
+## 📝 Notes
+
+- if the UI looks odd after an update, rebuild the `exe` and run the fresh file from `dist`
+- the desktop build requires Windows and `pywebview`
+- the interface language can be changed directly in the app settings
+
+---
+
 ## 📝 License
 
 Distributed under the **MIT** License. See [LICENSE](LICENSE) for details.

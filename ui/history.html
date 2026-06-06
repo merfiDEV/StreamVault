@@ -1,24 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="light" lang="ru">
 <head>
-<script>
-    (function() {
-        const stored = localStorage.getItem('dark_theme');
-        if (stored === 'true') {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-        } else if (stored === 'false') {
-            document.documentElement.classList.add('light');
-            document.documentElement.classList.remove('dark');
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-        }
-    })();
-</script>
+<script src="/static/js/shared.js"></script>
+<script>window.applyStoredTheme();</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StreamVault — История</title>
+<title>StreamVault вЂ” РСЃС‚РѕСЂРёСЏ</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -149,16 +136,16 @@ tailwind.config = {
 <!-- TopNavBar -->
 <header class="w-full sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_12px_32px_rgba(26,28,28,0.06)] flex justify-between items-center px-6 py-4">
     <div class="flex items-center gap-4">
-        <a href="/" class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 ease-emphasized" data-i18n-title="common.back" title="На главную">
+        <a href="/" class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 ease-emphasized" data-i18n-title="common.back" title="">
             <span class="material-symbols-outlined text-on-surface">arrow_back</span>
         </a>
-        <h1 class="text-2xl font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight" data-i18n="history.page_title">История</h1>
+        <h1 class="text-2xl font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight" data-i18n="history.page_title"></h1>
     </div>
     <div class="flex items-center gap-2">
         <button id="clear-btn" class="flex items-center gap-2 text-error hover:bg-error/10 px-4 py-2 rounded-full font-bold text-sm transition-colors duration-300">
-            <span class="material-symbols-outlined text-sm">delete_sweep</span> <span data-i18n="common.delete_all">Очистить всё</span>
+            <span class="material-symbols-outlined text-sm">delete_sweep</span> <span data-i18n="common.delete_all"></span>
         </button>
-        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" data-i18n-title="common.close_app" title="Закрыть приложение">
+        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" data-i18n-title="common.close_app" title="">
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
@@ -170,12 +157,12 @@ tailwind.config = {
         <div class="bg-surface-container-lowest p-6 rounded-3xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300">
             <div class="flex items-center gap-3 text-error mb-4">
                 <span class="material-symbols-outlined text-3xl">warning</span>
-                <h3 class="text-xl font-bold font-['Plus_Jakarta_Sans']" data-i18n="history.confirm_clear_title">Очистка истории</h3>
+                <h3 class="text-xl font-bold font-['Plus_Jakarta_Sans']" data-i18n="history.confirm_clear_title"></h3>
             </div>
-            <p class="text-on-surface-variant mb-6" data-i18n="history.confirm_clear_text">Вы уверены, что хотите очистить всю историю? Это действие нельзя отменить.</p>
+            <p class="text-on-surface-variant mb-6" data-i18n="history.confirm_clear_text"></p>
             <div class="flex justify-end gap-3">
-                <button id="cancel-clear" class="px-5 py-2.5 rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors" data-i18n="common.cancel">Отмена</button>
-                <button id="confirm-clear" class="px-5 py-2.5 rounded-full font-bold bg-error text-on-error hover:bg-error/90 transition-colors shadow-lg shadow-error/20" data-i18n="common.delete">Очистить</button>
+                <button id="cancel-clear" class="px-5 py-2.5 rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors" data-i18n="common.cancel"></button>
+                <button id="confirm-clear" class="px-5 py-2.5 rounded-full font-bold bg-error text-on-error hover:bg-error/90 transition-colors shadow-lg shadow-error/20" data-i18n="common.delete"></button>
             </div>
         </div>
     </div>
@@ -183,111 +170,23 @@ tailwind.config = {
     <!-- Stats Header -->
     <div class="grid grid-cols-2 gap-4 mb-8">
         <div class="bg-surface-container-lowest p-6 rounded-3xl relative overflow-hidden flex flex-col justify-center">
-            <span class="text-sm font-medium text-on-surface-variant" data-i18n="history.total_files">Всего файлов скачано</span>
+            <span class="text-sm font-medium text-on-surface-variant" data-i18n="history.total_files"></span>
             <span id="total-files" class="text-3xl font-extrabold text-primary mt-1">0</span>
         </div>
         <div class="bg-surface-container-lowest p-6 rounded-3xl relative overflow-hidden flex flex-col justify-center">
-            <span class="text-sm font-medium text-on-surface-variant" data-i18n="history.total_size">Общий вес загрузок</span>
-            <span id="total-size" class="text-3xl font-extrabold text-primary mt-1">0 МБ</span>
+            <span class="text-sm font-medium text-on-surface-variant" data-i18n="history.total_size"></span>
+            <span id="total-size" class="text-3xl font-extrabold text-primary mt-1">0 РњР‘</span>
         </div>
     </div>
 
     <!-- History List -->
     <div id="history-container" class="space-y-4">
-        <!-- Журнал загружается скриптом -->
+        <!-- Р–СѓСЂРЅР°Р» Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ СЃРєСЂРёРїС‚РѕРј -->
     </div>
 </main>
 
 <script>
 const API_URL = window.location.origin;
-
-// --- i18n ---
-let translations = {};
-let currentLang = 'ru';
-
-function getCachedLang() {
-    return localStorage.getItem('sv_language') || 'ru';
-}
-
-function getCachedTranslations(lang) {
-    try {
-        const data = localStorage.getItem(`sv_i18n_${lang}`);
-        return data ? JSON.parse(data) : null;
-    } catch { return null; }
-}
-
-function cacheTranslations(lang, data) {
-    try {
-        localStorage.setItem(`sv_i18n_${lang}`, JSON.stringify(data));
-    } catch {}
-}
-
-async function loadTranslations(lang) {
-    try {
-        const res = await fetch(`${API_URL}/api/i18n/${lang}`);
-        if (res.ok) {
-            const data = await res.json();
-            cacheTranslations(lang, data);
-            return data;
-        }
-    } catch (e) {
-        console.warn('Failed to fetch translations:', e);
-    }
-    return null;
-}
-
-function t(key, params = {}) {
-    const keys = key.split('.');
-    let val = translations;
-    for (const k of keys) {
-        if (val && typeof val === 'object' && k in val) {
-            val = val[k];
-        } else {
-            return key;
-        }
-    }
-    if (typeof val !== 'string') return key;
-    return val.replace(/\{(\w+)\}/g, (_, p) => params[p] ?? `{${p}}`);
-}
-
-function applyTranslations() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        el.textContent = t(key);
-    });
-    document.querySelectorAll('[data-i18n-title]').forEach(el => {
-        const key = el.getAttribute('data-i18n-title');
-        el.title = t(key);
-    });
-}
-
-async function initI18n() {
-    currentLang = getCachedLang();
-    const cached = getCachedTranslations(currentLang);
-    if (cached) {
-        translations = cached;
-        applyTranslations();
-    }
-
-    try {
-        const settingsRes = await fetch(`${API_URL}/api/settings`);
-        if (settingsRes.ok) {
-            const settings = await settingsRes.json();
-            const serverLang = settings.language || 'ru';
-            if (serverLang !== currentLang) {
-                currentLang = serverLang;
-                localStorage.setItem('sv_language', serverLang);
-            }
-            const fresh = await loadTranslations(currentLang);
-            if (fresh) {
-                translations = fresh;
-                applyTranslations();
-            }
-        }
-    } catch (e) {
-        // Сервер недоступен
-    }
-}
 
 function formatBytes(bytes, decimals = 1) {
     if (bytes === 0) return '0 B';
@@ -339,9 +238,9 @@ function createHistoryCard(record) {
                 </h3>
                 <div class="flex items-center gap-3 text-sm text-on-surface-variant flex-wrap">
                     <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] ${iconColor}">${icon}</span> ${record.format.toUpperCase()}</span>
-                    <span>•</span>
+                    <span>вЂў</span>
                     <span>${formatDate(record.created_at)}</span>
-                    ${!isError && record.file_size ? `<span>•</span><span>${formatBytes(record.file_size)}</span>` : ''}
+                    ${!isError && record.file_size ? `<span>вЂў</span><span>${formatBytes(record.file_size)}</span>` : ''}
                 </div>
                 ${isError ? `
                 <p class="text-sm text-error mt-2 line-clamp-1" title="${record.error_msg}">
@@ -362,7 +261,7 @@ function createHistoryCard(record) {
                         <span class="material-symbols-outlined text-[18px]">content_copy</span> ${t('common.copy_url')}
                     </button>
                 </div>
-                <button class="delete-btn p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors" data-id="${record.id}" title="Удалить из истории">
+                <button class="delete-btn p-1.5 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-colors" data-id="${record.id}" title="${t('history.delete_record')}">
                     <span class="material-symbols-outlined text-[20px]">delete</span>
                 </button>
             </div>
@@ -406,7 +305,7 @@ async function loadHistory() {
         document.getElementById('total-size').textContent = formatBytes(totalSize);
         applyTranslations();
 
-        // Привязываем слушатели
+        // РџСЂРёРІСЏР·С‹РІР°РµРј СЃР»СѓС€Р°С‚РµР»Рё
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = btn.dataset.id;
@@ -430,13 +329,13 @@ async function loadHistory() {
             btn.addEventListener('click', () => {
                 navigator.clipboard.writeText(btn.dataset.url);
                 const originalText = btn.innerHTML;
-                btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">check</span> URL`;
+                btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">check</span> ${t('common.copied')}`;
                 setTimeout(() => { btn.innerHTML = originalText; }, 2000);
             });
         });
 
     } catch (err) {
-        console.error("Ошибка загрузки истории", err);
+        console.error("РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РёСЃС‚РѕСЂРёРё", err);
     }
 }
 
@@ -446,7 +345,7 @@ const modalContent = confirmModal.querySelector('div');
 document.getElementById('clear-btn').addEventListener('click', () => {
     confirmModal.classList.remove('hidden');
     confirmModal.classList.add('flex');
-    // Небольшая задержка для анимации
+    // РќРµР±РѕР»СЊС€Р°СЏ Р·Р°РґРµСЂР¶РєР° РґР»СЏ Р°РЅРёРјР°С†РёРё
     requestAnimationFrame(() => {
         confirmModal.classList.remove('opacity-0');
         modalContent.classList.remove('scale-95');
@@ -499,10 +398,14 @@ async function loadThemeSettings() {
             document.documentElement.classList.remove('dark');
         }
     } catch (err) {
-        console.error('Ошибка загрузки настроек темы:', err);
+        console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РЅР°СЃС‚СЂРѕРµРє С‚РµРјС‹:', err);
     }
 }
 
 </script>
 </body>
 </html>
+
+
+
+
