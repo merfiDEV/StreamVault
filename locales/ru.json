@@ -121,6 +121,7 @@
     "storage_file_count": "{count} файлов"
     ,
     "ytdlp_label": "yt-dlp",
+    "ytdlp_versions": "Текущая: {current} • Последняя: {latest}",
     "ytdlp_check": "Проверить",
     "ytdlp_update": "Обновить",
     "ytdlp_update_available": "Доступно обновление yt-dlp",

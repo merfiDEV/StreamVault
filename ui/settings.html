@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="ru">
 <head>
 <script src="/static/js/shared.js"></script>
 <script>window.applyStoredTheme();</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StreamVault вЂ” РќР°СЃС‚СЂРѕР№РєРё</title>
+<title>StreamVault ? ?????????</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -61,10 +61,10 @@
 }
 
 :root.dark {
-    --primary: #ffb4a8;
-    --on-primary: #690000;
-    --primary-container: #930100;
-    --on-primary-container: #ffdad4;
+    --primary: #ff8a65;
+    --on-primary: #2d1208;
+    --primary-container: #ff7043;
+    --on-primary-container: #fff1eb;
     --secondary: #c8c6c5;
     --on-secondary: #303030;
     --secondary-container: #474746;
@@ -92,10 +92,10 @@
     --surface-container-highest: #333535;
     --surface-dim: #111414;
     --surface-bright: #373a3a;
-    --surface-tint: #ffb4a8;
+    --surface-tint: #ff8a65;
     --inverse-surface: #e2e2e2;
     --inverse-on-surface: #2f3131;
-    --inverse-primary: #bc0100;
+    --inverse-primary: #ff8a65;
     --primary-fixed: #ffdad4;
     --on-primary-fixed: #410000;
     --primary-fixed-dim: #ffb4a8;
@@ -127,7 +127,7 @@ h1, h2, h3 {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
 }
 .dark .signature-gradient {
-    background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+    background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
 }
 /* РљР°СЃС‚РѕРјРЅС‹Р№ СЃРєСЂРѕР»Р»Р±Р°СЂ РїРѕРґ РґРёР·Р°Р№РЅ */
 * {
@@ -247,11 +247,11 @@ tailwind.config = {
         <a href="/history" class="p-2 -ml-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400" data-i18n-title="common.history" title="">
             <span class="material-symbols-outlined">history</span>
         </a>
-        <h1 class="text-2xl font-bold text-red-700 dark:text-red-500 font-['Plus_Jakarta_Sans'] tracking-tight ml-2" data-i18n="settings.page_title"></h1>
+        <h1 class="text-2xl font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight ml-2" data-i18n="settings.page_title"></h1>
     </div>
     <div class="flex items-center gap-2">
         <button id="save-btn" class="signature-gradient text-on-primary px-6 py-2 rounded-full font-headline font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50" data-i18n="common.save"></button>
-        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" data-i18n-title="common.close_app" title="">
+        <button id="close-app" class="p-2 rounded-full hover:bg-primary/10 dark:hover:bg-primary/15 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-primary dark:hover:text-primary" data-i18n-title="common.close_app" title="">
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
@@ -602,7 +602,7 @@ tailwind.config = {
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-on-surface" data-i18n="settings.ytdlp_label"></p>
-                        <p id="ytdlp-version" class="text-sm text-on-surface-variant">вЂ”</p>
+                        <p id="ytdlp-version" class="text-sm text-on-surface-variant">—</p>
                     </div>
                     <button id="ytdlp-check" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold" data-i18n="settings.ytdlp_check"></button>
                     <button id="ytdlp-update" class="px-4 py-2 rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors text-sm font-semibold" data-i18n="settings.ytdlp_update"></button>
@@ -618,8 +618,8 @@ tailwind.config = {
             <div class="relative z-10 pr-24 md:pr-32">
                 <h3 class="text-xl font-bold mb-2" data-i18n="settings.storage_title"></h3>
                 <div class="flex flex-col mb-4">
-                    <span id="storage-used" class="text-3xl font-extrabold text-primary">0 B СЃРІРѕР±РѕРґРЅРѕ</span>
-                    <span id="storage-folder-info" class="text-sm font-medium text-on-surface-variant opacity-70 mt-1">РџР°РїРєР° Р·Р°РіСЂСѓР·РѕРє: 0 B</span>
+                    <span id="storage-used" class="text-3xl font-extrabold text-primary">0 B ????????</span>
+                    <span id="storage-folder-info" class="text-sm font-medium text-on-surface-variant opacity-70 mt-1">????? ????????: 0 B</span>
                 </div>
                 <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
                     <div id="storage-bar" class="w-0 h-full bg-primary rounded-full transition-all duration-500"></div>
@@ -879,7 +879,7 @@ function applySettings(settings) {
 document.getElementById('save-btn').addEventListener('click', async () => {
     const btn = document.getElementById('save-btn');
     btn.disabled = true;
-    btn.textContent = 'РЎРѕС…СЂР°РЅРµРЅРёРµ...';
+    btn.textContent = t('common.saving');
 
     const newSettings = {
         default_quality: qualityValue,
@@ -911,7 +911,7 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         showToast(t('notifications.settings_save_failed'), t('settings.section_downloads'), 'error');
     } finally {
         btn.disabled = false;
-        btn.textContent = 'РЎРѕС…СЂР°РЅРёС‚СЊ';
+        btn.textContent = t('common.save');
     }
 });
 
@@ -1039,7 +1039,7 @@ function updateCookieUI() {
 document.querySelectorAll('.source-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         cookieSource = btn.dataset.source;
-        // РџСЂРё РїРµСЂРµРєР»СЋС‡РµРЅРёРё РЅР° В«РћС‚РєР»СЋС‡РµРЅРѕВ» вЂ” РѕС‡РёС‰Р°РµРј РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ
+        // РџСЂРё РїРµСЂРµРєР»СЋС‡РµРЅРёРё РЅР° В«РћС‚РєР»СЋС‡РµРЅРѕВ» — РѕС‡РёС‰Р°РµРј РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ
         if (cookieSource === 'none' && currentSettings) {
             currentSettings.cookies_path = '';
             document.getElementById('cookies-path-text').textContent = t('settings.cookies_not_specified');
@@ -1080,7 +1080,7 @@ document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
 });
 
 async function saveSettingsAndReload() {
-    // Р•СЃР»Рё currentSettings РµС‰С‘ РЅРµ Р·Р°РіСЂСѓР¶РµРЅ вЂ” РїСЂРѕР±СѓРµРј Р·Р°РіСЂСѓР·РёС‚СЊ
+    // Р•СЃР»Рё currentSettings РµС‰С‘ РЅРµ Р·Р°РіСЂСѓР¶РµРЅ — РїСЂРѕР±СѓРµРј Р·Р°РіСЂСѓР·РёС‚СЊ
     if (!currentSettings) {
         try {
             const res = await fetch(`${API_URL}/api/settings`);
@@ -1115,7 +1115,7 @@ async function saveSettingsAndReload() {
     } catch (err) {
         console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ:', err);
     }
-    // РџРµСЂРµР·Р°РіСЂСѓР¶Р°РµРј вЂ” РїРµСЂРµРІРѕРґС‹ РїСЂРёРјРµРЅСЏС‚СЃСЏ РјРіРЅРѕРІРµРЅРЅРѕ РёР· localStorage
+    // РџРµСЂРµР·Р°РіСЂСѓР¶Р°РµРј — РїРµСЂРµРІРѕРґС‹ РїСЂРёРјРµРЅСЏС‚СЃСЏ РјРіРЅРѕРІРµРЅРЅРѕ РёР· localStorage
     window.location.reload();
 }
 
@@ -1154,7 +1154,7 @@ async function updateStorageUsage() {
     } catch (err) {
         console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… С…СЂР°РЅРёР»РёС‰Р°:', err);
         // Fallback РЅР° СЃР»СѓС‡Р°Р№ РѕС€РёР±РєРё
-        document.getElementById('storage-used').textContent = t('settings.storage_free', { value: 'вЂ”' });
+        document.getElementById('storage-used').textContent = t('settings.storage_free', { value: '—' });
         document.getElementById('storage-bar').style.width = '0%';
     }
 }
@@ -1164,10 +1164,10 @@ updateStorageUsage();
 function setYtDlpStatus(data) {
     const el = document.getElementById('ytdlp-version');
     const hint = document.getElementById('ytdlp-hint');
-    const current = data?.current || 'вЂ”';
-    const latest = data?.latest || 'вЂ”';
+    const current = data?.current || '—';
+    const latest = data?.latest || '—';
 
-    if (el) el.textContent = `Current: ${current} вЂў Latest: ${latest}`;
+    if (el) el.textContent = t('settings.ytdlp_versions', { current, latest });
 
     if (!hint) return;
 
@@ -1229,7 +1229,7 @@ document.getElementById('ytdlp-update')?.addEventListener('click', async () => {
         if (data?.error) {
             showToast(data.error, t('settings.ytdlp_label'), 'error');
         } else {
-            showToast(t('notifications.ytdlp_updated', { version: data.current || 'вЂ”' }), t('settings.ytdlp_label'), 'success');
+            showToast(t('notifications.ytdlp_updated', { version: data.current || '—' }), t('settings.ytdlp_label'), 'success');
             await refreshYtDlpInfo();
         }
     } catch (err) {

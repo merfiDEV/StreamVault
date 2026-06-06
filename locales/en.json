@@ -121,6 +121,7 @@
     "storage_file_count": "{count} files"
     ,
     "ytdlp_label": "yt-dlp",
+    "ytdlp_versions": "Current: {current} • Latest: {latest}",
     "ytdlp_check": "Check",
     "ytdlp_update": "Update",
     "ytdlp_update_available": "yt-dlp update available",

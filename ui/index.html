@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="light" lang="ru">
 
 <head>
@@ -135,10 +135,10 @@
         }
 
         :root.dark {
-            --primary: #ffb4a8;
-            --on-primary: #690000;
-            --primary-container: #930100;
-            --on-primary-container: #ffdad4;
+            --primary: #ff8a65;
+            --on-primary: #2d1208;
+            --primary-container: #ff7043;
+            --on-primary-container: #fff1eb;
             --secondary: #c8c6c5;
             --on-secondary: #303030;
             --secondary-container: #474746;
@@ -169,7 +169,7 @@
             --surface-tint: #ffb4a8;
             --inverse-surface: #e2e2e2;
             --inverse-on-surface: #2f3131;
-            --inverse-primary: #bc0100;
+            --inverse-primary: #ff8a65;
             --primary-fixed: #ffdad4;
             --on-primary-fixed: #410000;
             --primary-fixed-dim: #ffb4a8;
@@ -182,7 +182,7 @@
             --on-tertiary-fixed: #001a40;
             --tertiary-fixed-dim: #acc7ff;
             --on-tertiary-fixed-variant: #004491;
-            --primary-rgb: 255, 180, 168;
+            --primary-rgb: 255, 138, 101;
         }
 
         .material-symbols-outlined {
@@ -194,7 +194,7 @@
         }
 
         .dark .signature-gradient {
-            background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+            background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
         }
 
         @keyframes slideIn {
@@ -665,7 +665,7 @@
                 <span class="material-symbols-outlined">settings</span>
             </a>
             <button id="close-app"
-                class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400"
+                class="p-2 rounded-full hover:bg-primary/10 dark:hover:bg-primary/15 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-primary dark:hover:text-primary"
                 data-i18n-title="common.close_app" title="">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -1029,7 +1029,7 @@
             settingsLink.classList.add('pointer-events-none', 'opacity-50');
 
             try {
-                // Р‘С‹СЃС‚СЂР°СЏ РїСЂРѕРІРµСЂРєР° РЅР° РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ РїРѕ URL вЂ” Р±РµР· Р·Р°РїСЂРѕСЃР° Рє API
+                // Р‘С‹СЃС‚СЂР°СЏ РїСЂРѕРІРµСЂРєР° РЅР° РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ РїРѕ URL — Р±РµР· Р·Р°РїСЂРѕСЃР° Рє API
                 if (isSingleVideoUrl(url)) {
                     await startDownload(url);
                     return;
@@ -1045,17 +1045,17 @@
                 const data = await response.json();
 
                 if (data.error) {
-                    // РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РїР»РµР№Р»РёСЃС‚Р° вЂ” РїСЂРѕР±СѓРµРј РєР°Рє РѕР±С‹С‡РЅРѕРµ РІРёРґРµРѕ
+                    // РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РїР»РµР№Р»РёСЃС‚Р° — РїСЂРѕР±СѓРµРј РєР°Рє РѕР±С‹С‡РЅРѕРµ РІРёРґРµРѕ
                     await startDownload(url);
                 } else if (data.is_playlist && data.entries && data.entries.length >= 2) {
-                    // РќР°СЃС‚РѕСЏС‰РёР№ РїР»РµР№Р»РёСЃС‚ вЂ” РѕС‚РєСЂС‹РІР°РµРј РґРёР°Р»РѕРі РІС‹Р±РѕСЂР°
+                    // РќР°СЃС‚РѕСЏС‰РёР№ РїР»РµР№Р»РёСЃС‚ — РѕС‚РєСЂС‹РІР°РµРј РґРёР°Р»РѕРі РІС‹Р±РѕСЂР°
                     currentPlaylistUrl = url;
                     playlistEntries = data.entries;
                     selectedIndices = new Set();
                     isSearchDialog = false;
                     showPlaylistDialog(data);
                 } else {
-                    // РћРґРЅРѕ РІРёРґРµРѕ (РёР»Рё РѕС€РёР±РєР° РґРµС‚РµРєС†РёРё) вЂ” СЃРєР°С‡РёРІР°РµРј РЅР°РїСЂСЏРјСѓСЋ
+                    // РћРґРЅРѕ РІРёРґРµРѕ (РёР»Рё РѕС€РёР±РєР° РґРµС‚РµРєС†РёРё) — СЃРєР°С‡РёРІР°РµРј РЅР°РїСЂСЏРјСѓСЋ
                     await startDownload(url);
                 }
             } catch (err) {
@@ -1105,7 +1105,7 @@
                 <p class="text-sm font-medium text-on-surface line-clamp-2">${escapeHtml(entry.title)}</p>
                 <div class="flex items-center gap-2 mt-1">
                     ${entry.channel ? `<span class="text-xs text-on-surface-variant truncate">${escapeHtml(entry.channel)}</span>` : ''}
-                    ${entry.view_count ? `<span class="text-xs text-on-surface-variant">вЂў ${t('main.preview_views', { count: formatViewCount(entry.view_count) })}</span>` : ''}
+                    ${entry.view_count ? `<span class="text-xs text-on-surface-variant">• ${t('main.preview_views', { count: formatViewCount(entry.view_count) })}</span>` : ''}
                 </div>
             </div>
             <span class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity text-[20px] shrink-0">play_circle</span>
@@ -1136,7 +1136,7 @@
                     return u.pathname === '/watch' || u.pathname === '/playlist' || u.pathname.startsWith('/shorts/') || u.pathname.startsWith('/v/');
                 }
 
-                // youtu.be/ID вЂ” РІСЃРµРіРґР° РІР°Р»РёРґРЅРѕ РµСЃР»Рё РµСЃС‚СЊ РїСѓС‚СЊ
+                // youtu.be/ID — РІСЃРµРіРґР° РІР°Р»РёРґРЅРѕ РµСЃР»Рё РµСЃС‚СЊ РїСѓС‚СЊ
                 if (host === 'youtu.be') {
                     return u.pathname.length > 1;
                 }
@@ -1149,18 +1149,18 @@
 
         /**
          * Р’РѕР·РІСЂР°С‰Р°РµС‚ true РµСЃР»Рё URL СЏРІРЅРѕ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ.
-         * youtu.be/ID вЂ” РІСЃРµРіРґР° РѕРґРёРЅРѕС‡РЅРѕРµ
-         * youtube.com/watch?v=ID вЂ” РѕРґРёРЅРѕС‡РЅРѕРµ, РµСЃР»Рё РЅРµС‚ РїР°СЂР°РјРµС‚СЂР° &list=
+         * youtu.be/ID — РІСЃРµРіРґР° РѕРґРёРЅРѕС‡РЅРѕРµ
+         * youtube.com/watch?v=ID — РѕРґРёРЅРѕС‡РЅРѕРµ, РµСЃР»Рё РЅРµС‚ РїР°СЂР°РјРµС‚СЂР° &list=
          */
         function isSingleVideoUrl(url) {
             try {
                 const u = new URL(url);
                 const host = u.hostname.replace('www.', '');
 
-                // youtu.be/VIDEO_ID вЂ” РєРѕСЂРѕС‚РєР°СЏ СЃСЃС‹Р»РєР°, РІСЃРµРіРґР° РѕРґРЅРѕ РІРёРґРµРѕ
+                // youtu.be/VIDEO_ID — РєРѕСЂРѕС‚РєР°СЏ СЃСЃС‹Р»РєР°, РІСЃРµРіРґР° РѕРґРЅРѕ РІРёРґРµРѕ
                 if (host === 'youtu.be') return true;
 
-                // youtube.com/watch?v=ID вЂ” РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ С‚РѕР»СЊРєРѕ Р±РµР· &list=
+                // youtube.com/watch?v=ID — РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ С‚РѕР»СЊРєРѕ Р±РµР· &list=
                 if ((host === 'youtube.com' || host === 'm.youtube.com') && u.pathname === '/watch') {
                     return !u.searchParams.has('list');
                 }
