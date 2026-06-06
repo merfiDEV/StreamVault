@@ -14,7 +14,8 @@
     "confirm": "Подтвердить",
     "delete": "Удалить",
     "delete_all": "Очистить всё",
-    "copy_url": "URL",
+    "copy_url": "Скопировать URL",
+    "copied": "Скопировано",
     "open_folder": "Открыть папку",
     "items": "items",
     "items_count": "{count} шт.",
@@ -69,7 +70,7 @@
   },
   "settings": {
     "page_title": "Настройки",
-    "page_subtitle": "Настройте приложение под себя. Preferences сохраняются автоматически.",
+    "page_subtitle": "Настройте приложение под себя. Настройки сохраняются автоматически.",
     "section_downloads": "Настройки загрузки",
     "quality_label": "Качество по умолчанию",
     "quality_desc": "Приоритет высокого качества видео",
@@ -79,6 +80,7 @@
     "format_mp3": "MP3 (аудио)",
     "save_path_label": "Путь сохранения",
     "save_location_picker_title": "Выберите путь сохранения",
+    "save_location_placeholder": "C:\\Users\\Name\\Videos",
     "save_location_browse": "Обзор",
     "random_filename_label": "Случайное имя файла",
     "random_filename_desc": "Вместо оригинального названия видео",
@@ -131,7 +133,8 @@
     "empty_title": "История пуста",
     "confirm_clear_title": "Очистка истории",
     "confirm_clear_text": "Вы уверены, что хотите очистить всю историю? Это действие нельзя отменить.",
-    "delete_confirm": "Вы уверены, что хотите удалить эту запись из истории?"
+    "delete_confirm": "Вы уверены, что хотите удалить эту запись из истории?",
+    "delete_record": "Удалить из истории"
   },
   "status": {
     "loading_metadata": "Загрузка метаданных...",

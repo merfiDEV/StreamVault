@@ -1,22 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="light" lang="ru">
 
 <head>
-    <script>
-        (function () {
-            const stored = localStorage.getItem('dark_theme');
-            if (stored === 'true') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-            } else if (stored === 'false') {
-                document.documentElement.classList.add('light');
-                document.documentElement.classList.remove('dark');
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-            }
-        })();
-    </script>
+    <script src="/static/js/shared.js"></script>
+    <script>window.applyStoredTheme();</script>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>StreamVault</title>
@@ -242,7 +229,7 @@
             animation: slideOut 0.3s ease-in;
         }
 
-        /* Кастомный скроллбар под дизайн */
+        /* РљР°СЃС‚РѕРјРЅС‹Р№ СЃРєСЂРѕР»Р»Р±Р°СЂ РїРѕРґ РґРёР·Р°Р№РЅ */
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
         }
@@ -659,27 +646,27 @@
     <header class="w-full flex justify-between items-center px-6 py-4">
         <div class="flex items-center gap-2">
             <span class="text-primary font-headline font-800 text-2xl tracking-tighter"
-                data-i18n="common.app_subtitle">StreamVault</span>
+                data-i18n="common.app_subtitle"></span>
         </div>
         <div class="flex items-center gap-2">
             <button id="theme-toggle"
                 class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400"
-                data-i18n-title="main.theme_toggle" title="Переключить тему">
+                data-i18n-title="main.theme_toggle" title="">
                 <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
             </button>
             <a id="history-link" href="/history"
                 class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400"
-                data-i18n-title="common.history" title="История загрузок">
+                data-i18n-title="common.history" title="">
                 <span class="material-symbols-outlined">history</span>
             </a>
             <a id="settings-link" href="/settings"
                 class="p-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400"
-                data-i18n-title="common.settings" title="Настройки">
+                data-i18n-title="common.settings" title="">
                 <span class="material-symbols-outlined">settings</span>
             </a>
             <button id="close-app"
                 class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400"
-                data-i18n-title="common.close_app" title="Закрыть приложение">
+                data-i18n-title="common.close_app" title="">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -696,7 +683,7 @@
             <div class="flex items-center justify-between p-6 border-b border-outline-variant">
                 <div>
                     <h2 id="playlist-title" class="text-xl font-headline font-bold text-on-surface"
-                        data-i18n="main.playlist_title">Playlist</h2>
+                        data-i18n="main.playlist_title"></h2>
                     <p id="playlist-count" class="text-sm text-on-surface-variant mt-1"></p>
                 </div>
                 <button id="playlist-close"
@@ -711,18 +698,14 @@
                 <div class="flex gap-3 mb-4 px-2">
                     <button id="select-all-btn"
                         class="text-sm text-primary hover:text-primary-container font-semibold transition-colors"
-                        data-i18n="main.select_all">
-                        Выбрать все
-                    </button>
+                        data-i18n="main.select_all"></button>
                     <button id="deselect-all-btn"
                         class="text-sm text-on-surface-variant hover:text-on-surface font-semibold transition-colors"
-                        data-i18n="main.deselect_all">
-                        Снять все
-                    </button>
+                        data-i18n="main.deselect_all"></button>
                 </div>
                 <!-- Video List -->
                 <div id="playlist-videos" class="space-y-2">
-                    <!-- Видео будут добавлены динамически -->
+                    <!-- Р’РёРґРµРѕ Р±СѓРґСѓС‚ РґРѕР±Р°РІР»РµРЅС‹ РґРёРЅР°РјРёС‡РµСЃРєРё -->
                 </div>
             </div>
 
@@ -752,25 +735,22 @@
                     <input id="url-input"
                         class="w-full bg-transparent border-none focus:ring-0 text-xl font-body text-on-surface placeholder:text-on-secondary-container"
                         data-i18n-placeholder="main.url_placeholder"
-                        placeholder="Вставьте URL или ?запрос для поиска..." type="text" />
+                        placeholder="" type="text" />
                 </div>
                 <button id="download-btn"
                     class="signature-gradient text-on-primary px-10 py-4 rounded-full font-headline font-bold text-lg hover-lift btn-glow btn-ripple active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-i18n="main.download_btn">
-                    Скачать
-                </button>
+                    data-i18n="main.download_btn"></button>
             </div>
 
             <!-- Download Queue Section -->
             <section class="flex flex-col gap-6">
                 <div class="flex items-center justify-between px-2">
-                    <h2 class="font-headline font-bold text-xl text-on-surface" data-i18n="main.active_downloads">
-                        Активные загрузки</h2>
+                    <h2 class="font-headline font-bold text-xl text-on-surface" data-i18n="main.active_downloads"></h2>
                     <span id="active-count"
                         class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-label font-semibold"></span>
                 </div>
                 <div id="downloads-list" class="space-y-3">
-                    <!-- Загрузки будут добавлены сюда динамически -->
+                    <!-- Р—Р°РіСЂСѓР·РєРё Р±СѓРґСѓС‚ РґРѕР±Р°РІР»РµРЅС‹ СЃСЋРґР° РґРёРЅР°РјРёС‡РµСЃРєРё -->
                     <div id="empty-state"
                         class="empty-state-glow relative overflow-hidden rounded-[2rem] border border-outline-variant/60 px-6 py-8 md:px-8 md:py-10 text-on-surface shadow-[0_24px_80px_rgba(20,20,20,0.08)]">
                         <div
@@ -783,10 +763,9 @@
                                     <span class="material-symbols-outlined text-[34px]">download</span>
                                 </div>
                                 <p class="text-2xl font-headline font-extrabold tracking-tight text-on-surface"
-                                    data-i18n="main.no_downloads">Нет активных загрузок</p>
+                                    data-i18n="main.no_downloads"></p>
                                 <p class="mt-2 max-w-xl text-sm leading-6 text-on-surface-variant"
-                                    data-i18n="main.empty_state_subtitle">Вставьте ссылку, плейлист или поисковый
-                                    запрос, и StreamVault сразу начнет работу.</p>
+                                    data-i18n="main.empty_state_subtitle"></p>
                             </div>
                             <div class="grid gap-3 md:grid-cols-3">
                                 <div
@@ -796,10 +775,9 @@
                                         <span class="material-symbols-outlined text-[20px]">link</span>
                                     </div>
                                     <p class="font-headline text-sm font-bold text-on-surface"
-                                        data-i18n="main.empty_state_mode_link_title">Одна ссылка</p>
+                                        data-i18n="main.empty_state_mode_link_title"></p>
                                     <p class="mt-1 text-sm leading-5 text-on-surface-variant"
-                                        data-i18n="main.empty_state_mode_link_text">Для быстрого скачивания видео или
-                                        Shorts без лишних шагов.</p>
+                                        data-i18n="main.empty_state_mode_link_text"></p>
                                 </div>
                                 <div
                                     class="rounded-[1.5rem] border border-outline-variant/60 bg-surface-container-lowest/80 p-4 text-left backdrop-blur-sm">
@@ -808,10 +786,9 @@
                                         <span class="material-symbols-outlined text-[20px]">queue_music</span>
                                     </div>
                                     <p class="font-headline text-sm font-bold text-on-surface"
-                                        data-i18n="main.empty_state_mode_playlist_title">Плейлист</p>
+                                        data-i18n="main.empty_state_mode_playlist_title"></p>
                                     <p class="mt-1 text-sm leading-5 text-on-surface-variant"
-                                        data-i18n="main.empty_state_mode_playlist_text">Откроется выбор роликов, чтобы
-                                        скачать всё или только нужное.</p>
+                                        data-i18n="main.empty_state_mode_playlist_text"></p>
                                 </div>
                                 <div
                                     class="rounded-[1.5rem] border border-outline-variant/60 bg-surface-container-lowest/80 p-4 text-left backdrop-blur-sm">
@@ -820,10 +797,9 @@
                                         <span class="material-symbols-outlined text-[20px]">travel_explore</span>
                                     </div>
                                     <p class="font-headline text-sm font-bold text-on-surface"
-                                        data-i18n="main.empty_state_mode_search_title">Поиск</p>
+                                        data-i18n="main.empty_state_mode_search_title"></p>
                                     <p class="mt-1 text-sm leading-5 text-on-surface-variant"
-                                        data-i18n="main.empty_state_mode_search_text">Начните с ?, чтобы искать видео
-                                        прямо внутри приложения.</p>
+                                        data-i18n="main.empty_state_mode_search_text"></p>
                                 </div>
                             </div>
                             <div
@@ -831,26 +807,25 @@
                                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div>
                                         <p class="text-sm font-semibold uppercase tracking-[0.22em] text-on-surface-variant"
-                                            data-i18n="main.empty_state_try_title">Попробовать сейчас</p>
+                                            data-i18n="main.empty_state_try_title"></p>
                                         <p class="mt-1 text-sm text-on-surface-variant"
-                                            data-i18n="main.empty_state_try_subtitle">Нажмите на пример, и он
-                                            подставится в поле ввода.</p>
+                                            data-i18n="main.empty_state_try_subtitle"></p>
                                     </div>
                                     <div class="flex flex-wrap justify-center gap-2 md:justify-end">
                                         <button type="button"
                                             class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                                             data-fill="?lofi mix">
-                                            <span data-i18n="main.empty_state_chip_search">?lofi mix</span>
+                                            <span data-i18n="main.empty_state_chip_search"></span>
                                         </button>
                                         <button type="button"
                                             class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                                             data-fill="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
-                                            <span data-i18n="main.empty_state_chip_video">Пример ссылки</span>
+                                            <span data-i18n="main.empty_state_chip_video"></span>
                                         </button>
                                         <button type="button"
                                             class="empty-state-chip quick-fill-btn rounded-full border border-outline-variant bg-surface-container-high px-4 py-2 text-sm font-semibold text-on-surface transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
                                             data-fill="https://www.youtube.com/playlist?list=PL">
-                                            <span data-i18n="main.empty_state_chip_playlist">Пример плейлиста</span>
+                                            <span data-i18n="main.empty_state_chip_playlist"></span>
                                         </button>
                                     </div>
                                 </div>
@@ -909,103 +884,6 @@
                 urlInput.dispatchEvent(new Event('input', { bubbles: true }));
             });
         });
-
-        // --- i18n ---
-        let translations = {};
-        let currentLang = 'ru';
-
-        function getCachedLang() {
-            return localStorage.getItem('sv_language') || 'ru';
-        }
-
-        function getCachedTranslations(lang) {
-            try {
-                const data = localStorage.getItem(`sv_i18n_${lang}`);
-                return data ? JSON.parse(data) : null;
-            } catch { return null; }
-        }
-
-        function cacheTranslations(lang, data) {
-            try {
-                localStorage.setItem(`sv_i18n_${lang}`, JSON.stringify(data));
-            } catch { }
-        }
-
-        async function loadTranslations(lang) {
-            try {
-                const res = await fetch(`${API_URL}/api/i18n/${lang}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    cacheTranslations(lang, data);
-                    return data;
-                }
-            } catch (e) {
-                console.warn('Failed to fetch translations:', e);
-            }
-            return null;
-        }
-
-        function t(key, params = {}) {
-            const keys = key.split('.');
-            let val = translations;
-            for (const k of keys) {
-                if (val && typeof val === 'object' && k in val) {
-                    val = val[k];
-                } else {
-                    return key;
-                }
-            }
-            if (typeof val !== 'string') return key;
-            return val.replace(/\{(\w+)\}/g, (_, p) => params[p] ?? `{${p}}`);
-        }
-
-        function applyTranslations() {
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                el.textContent = t(key);
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                el.placeholder = t(key);
-            });
-            document.querySelectorAll('[data-i18n-title]').forEach(el => {
-                const key = el.getAttribute('data-i18n-title');
-                el.title = t(key);
-            });
-        }
-
-        async function initI18n() {
-            // 1. Мгновенно: читаем язык из кеша
-            currentLang = getCachedLang();
-            const cached = getCachedTranslations(currentLang);
-            if (cached) {
-                translations = cached;
-                applyTranslations();
-            }
-
-            // 2. Фон: проверяем сервер (язык мог измениться)
-            try {
-                const settingsRes = await fetch(`${API_URL}/api/settings`);
-                if (settingsRes.ok) {
-                    const settings = await settingsRes.json();
-                    const serverLang = settings.language || 'ru';
-                    if (serverLang !== currentLang) {
-                        currentLang = serverLang;
-                        localStorage.setItem('sv_language', serverLang);
-                    }
-                    // Загружаем/обновляем переводы
-                    const fresh = await loadTranslations(currentLang);
-                    if (fresh) {
-                        translations = fresh;
-                        applyTranslations();
-                    }
-                }
-            } catch (e) {
-                // Сервер недоступен — используем кеш
-            }
-        }
-
-        // Вызываем СРАЗУ — переводы применятся мгновенно из кеша
         initI18n();
 
         // --- Drag & Drop ---
@@ -1036,7 +914,7 @@
             }
         });
 
-        // --- Режим кнопки: Скачать / Найти ---
+        // --- Р РµР¶РёРј РєРЅРѕРїРєРё: РЎРєР°С‡Р°С‚СЊ / РќР°Р№С‚Рё ---
         let isSearchMode = false;
 
         function updateButtonMode() {
@@ -1062,11 +940,11 @@
         });
 
         urlInput.addEventListener('paste', () => {
-            // Ждём пока значение обновится после вставки
+            // Р–РґС‘Рј РїРѕРєР° Р·РЅР°С‡РµРЅРёРµ РѕР±РЅРѕРІРёС‚СЃСЏ РїРѕСЃР»Рµ РІСЃС‚Р°РІРєРё
             setTimeout(handleUrlInput, 10);
         });
 
-        // WebSocket подключение
+        // WebSocket РїРѕРґРєР»СЋС‡РµРЅРёРµ
         let ws = null;
         function connectWebSocket() {
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -1087,18 +965,18 @@
             };
         }
 
-        // Загрузка видео
+        // Р—Р°РіСЂСѓР·РєР° РІРёРґРµРѕ
         let currentPlaylistUrl = '';
         let playlistEntries = [];
         let selectedIndices = new Set();
-        let searchResults = [];    // результаты поиска
-        let isSearchDialog = false; // true = диалог показывает поиск, false = плейлист
+        let searchResults = [];    // СЂРµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР°
+        let isSearchDialog = false; // true = РґРёР°Р»РѕРі РїРѕРєР°Р·С‹РІР°РµС‚ РїРѕРёСЃРє, false = РїР»РµР№Р»РёСЃС‚
 
         downloadBtn.addEventListener('click', async () => {
             const raw = urlInput.value.trim();
             if (!raw) return;
 
-            // === РЕЖИМ ПОИСКА ===
+            // === Р Р•Р–РРњ РџРћРРЎРљРђ ===
             if (raw.startsWith('?')) {
                 const query = raw.substring(1).trim();
                 if (!query) return;
@@ -1135,10 +1013,10 @@
                 return;
             }
 
-            // === РЕЖИМ ЗАГРУЗКИ (оригинальная логика) ===
+            // === Р Р•Р–РРњ Р—РђР“Р РЈР—РљР (РѕСЂРёРіРёРЅР°Р»СЊРЅР°СЏ Р»РѕРіРёРєР°) ===
             const url = raw;
 
-            // Проверка на корректность YouTube ссылки
+            // РџСЂРѕРІРµСЂРєР° РЅР° РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ YouTube СЃСЃС‹Р»РєРё
             if (!isValidYoutubeUrl(url)) {
                 showToast(t('notifications.invalid_youtube_url'));
                 return;
@@ -1151,13 +1029,13 @@
             settingsLink.classList.add('pointer-events-none', 'opacity-50');
 
             try {
-                // Быстрая проверка на одиночное видео по URL — без запроса к API
+                // Р‘С‹СЃС‚СЂР°СЏ РїСЂРѕРІРµСЂРєР° РЅР° РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ РїРѕ URL вЂ” Р±РµР· Р·Р°РїСЂРѕСЃР° Рє API
                 if (isSingleVideoUrl(url)) {
                     await startDownload(url);
                     return;
                 }
 
-                // Запрашиваем API только для потенциальных плейлистов
+                // Р—Р°РїСЂР°С€РёРІР°РµРј API С‚РѕР»СЊРєРѕ РґР»СЏ РїРѕС‚РµРЅС†РёР°Р»СЊРЅС‹С… РїР»РµР№Р»РёСЃС‚РѕРІ
                 const response = await fetch(`${API_URL}/api/playlist/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1167,21 +1045,21 @@
                 const data = await response.json();
 
                 if (data.error) {
-                    // Ошибка при получении плейлиста — пробуем как обычное видео
+                    // РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РїР»РµР№Р»РёСЃС‚Р° вЂ” РїСЂРѕР±СѓРµРј РєР°Рє РѕР±С‹С‡РЅРѕРµ РІРёРґРµРѕ
                     await startDownload(url);
                 } else if (data.is_playlist && data.entries && data.entries.length >= 2) {
-                    // Настоящий плейлист — открываем диалог выбора
+                    // РќР°СЃС‚РѕСЏС‰РёР№ РїР»РµР№Р»РёСЃС‚ вЂ” РѕС‚РєСЂС‹РІР°РµРј РґРёР°Р»РѕРі РІС‹Р±РѕСЂР°
                     currentPlaylistUrl = url;
                     playlistEntries = data.entries;
                     selectedIndices = new Set();
                     isSearchDialog = false;
                     showPlaylistDialog(data);
                 } else {
-                    // Одно видео (или ошибка детекции) — скачиваем напрямую
+                    // РћРґРЅРѕ РІРёРґРµРѕ (РёР»Рё РѕС€РёР±РєР° РґРµС‚РµРєС†РёРё) вЂ” СЃРєР°С‡РёРІР°РµРј РЅР°РїСЂСЏРјСѓСЋ
                     await startDownload(url);
                 }
             } catch (err) {
-                console.error('Ошибка при проверке URL:', err);
+                console.error('РћС€РёР±РєР° РїСЂРё РїСЂРѕРІРµСЂРєРµ URL:', err);
                 await startDownload(url);
             } finally {
                 downloadBtn.disabled = false;
@@ -1190,7 +1068,7 @@
             }
         });
 
-        // --- ПОИСК: показать диалог результатов ---
+        // --- РџРћРРЎРљ: РїРѕРєР°Р·Р°С‚СЊ РґРёР°Р»РѕРі СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ ---
         function showSearchDialog(data) {
             const dialog = document.getElementById('playlist-dialog');
             const title = document.getElementById('playlist-title');
@@ -1227,7 +1105,7 @@
                 <p class="text-sm font-medium text-on-surface line-clamp-2">${escapeHtml(entry.title)}</p>
                 <div class="flex items-center gap-2 mt-1">
                     ${entry.channel ? `<span class="text-xs text-on-surface-variant truncate">${escapeHtml(entry.channel)}</span>` : ''}
-                    ${entry.view_count ? `<span class="text-xs text-on-surface-variant">• ${formatViewCount(entry.view_count)} views</span>` : ''}
+                    ${entry.view_count ? `<span class="text-xs text-on-surface-variant">вЂў ${t('main.preview_views', { count: formatViewCount(entry.view_count) })}</span>` : ''}
                 </div>
             </div>
             <span class="material-symbols-outlined text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity text-[20px] shrink-0">play_circle</span>
@@ -1242,7 +1120,7 @@
         }
 
         /**
-         * Возвращает true если это корректная ссылка на YouTube.
+         * Р’РѕР·РІСЂР°С‰Р°РµС‚ true РµСЃР»Рё СЌС‚Рѕ РєРѕСЂСЂРµРєС‚РЅР°СЏ СЃСЃС‹Р»РєР° РЅР° YouTube.
          */
         function isValidYoutubeUrl(url) {
             try {
@@ -1250,15 +1128,15 @@
                 const host = u.hostname.replace('www.', '');
                 const validHosts = ['youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com'];
 
-                // Проверяем хост
+                // РџСЂРѕРІРµСЂСЏРµРј С…РѕСЃС‚
                 if (!validHosts.includes(host)) return false;
 
-                // Для youtube.com проверяем наличие параметров или путей (чтобы не пропускать просто youtube.com)
+                // Р”Р»СЏ youtube.com РїСЂРѕРІРµСЂСЏРµРј РЅР°Р»РёС‡РёРµ РїР°СЂР°РјРµС‚СЂРѕРІ РёР»Рё РїСѓС‚РµР№ (С‡С‚РѕР±С‹ РЅРµ РїСЂРѕРїСѓСЃРєР°С‚СЊ РїСЂРѕСЃС‚Рѕ youtube.com)
                 if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com') {
                     return u.pathname === '/watch' || u.pathname === '/playlist' || u.pathname.startsWith('/shorts/') || u.pathname.startsWith('/v/');
                 }
 
-                // youtu.be/ID — всегда валидно если есть путь
+                // youtu.be/ID вЂ” РІСЃРµРіРґР° РІР°Р»РёРґРЅРѕ РµСЃР»Рё РµСЃС‚СЊ РїСѓС‚СЊ
                 if (host === 'youtu.be') {
                     return u.pathname.length > 1;
                 }
@@ -1270,19 +1148,19 @@
         }
 
         /**
-         * Возвращает true если URL явно указывает на одиночное видео.
-         * youtu.be/ID — всегда одиночное
-         * youtube.com/watch?v=ID — одиночное, если нет параметра &list=
+         * Р’РѕР·РІСЂР°С‰Р°РµС‚ true РµСЃР»Рё URL СЏРІРЅРѕ СѓРєР°Р·С‹РІР°РµС‚ РЅР° РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ.
+         * youtu.be/ID вЂ” РІСЃРµРіРґР° РѕРґРёРЅРѕС‡РЅРѕРµ
+         * youtube.com/watch?v=ID вЂ” РѕРґРёРЅРѕС‡РЅРѕРµ, РµСЃР»Рё РЅРµС‚ РїР°СЂР°РјРµС‚СЂР° &list=
          */
         function isSingleVideoUrl(url) {
             try {
                 const u = new URL(url);
                 const host = u.hostname.replace('www.', '');
 
-                // youtu.be/VIDEO_ID — короткая ссылка, всегда одно видео
+                // youtu.be/VIDEO_ID вЂ” РєРѕСЂРѕС‚РєР°СЏ СЃСЃС‹Р»РєР°, РІСЃРµРіРґР° РѕРґРЅРѕ РІРёРґРµРѕ
                 if (host === 'youtu.be') return true;
 
-                // youtube.com/watch?v=ID — одиночное видео только без &list=
+                // youtube.com/watch?v=ID вЂ” РѕРґРёРЅРѕС‡РЅРѕРµ РІРёРґРµРѕ С‚РѕР»СЊРєРѕ Р±РµР· &list=
                 if ((host === 'youtube.com' || host === 'm.youtube.com') && u.pathname === '/watch') {
                     return !u.searchParams.has('list');
                 }
@@ -1307,7 +1185,7 @@
                     showSuccessState();
                 }
             } catch (err) {
-                console.error('Ошибка при загрузке:', err);
+                console.error('РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ:', err);
             }
         }
 
@@ -1319,7 +1197,7 @@
             downloadBtn.innerHTML = `
         <div class="flex items-center gap-2">
             <span class="material-symbols-outlined">check_circle</span>
-            <span data-i18n="status.completed">${t('status.completed')}</span>
+            <span data-i18n="status.completed"></span>
         </div>
     `;
 
@@ -1539,7 +1417,7 @@
             btn.disabled = selectedIndices.size === 0;
         }
 
-        // Закрытие диалога
+        // Р—Р°РєСЂС‹С‚РёРµ РґРёР°Р»РѕРіР°
         document.getElementById('playlist-close').addEventListener('click', closePlaylistDialog);
         document.getElementById('playlist-dialog').addEventListener('click', (e) => {
             if (e.target === e.currentTarget) closePlaylistDialog();
@@ -1557,7 +1435,7 @@
             clearHeroPreview();
         }
 
-        // Выбрать все
+        // Р’С‹Р±СЂР°С‚СЊ РІСЃРµ
         document.getElementById('select-all-btn').addEventListener('click', () => {
             const entries = isSearchDialog ? searchResults : playlistEntries;
             entries.forEach(entry => selectedIndices.add(entry.index));
@@ -1565,14 +1443,14 @@
             if (isSearchDialog) updateSearchDownloadButton(); else updateDownloadButton();
         });
 
-        // Снять все
+        // РЎРЅСЏС‚СЊ РІСЃРµ
         document.getElementById('deselect-all-btn').addEventListener('click', () => {
             selectedIndices.clear();
             document.querySelectorAll('.playlist-checkbox').forEach(cb => cb.checked = false);
             if (isSearchDialog) updateSearchDownloadButton(); else updateDownloadButton();
         });
 
-        // Скачать выбранные (плейлист ИЛИ результаты поиска)
+        // РЎРєР°С‡Р°С‚СЊ РІС‹Р±СЂР°РЅРЅС‹Рµ (РїР»РµР№Р»РёСЃС‚ РР›Р СЂРµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР°)
         document.getElementById('playlist-download-btn').addEventListener('click', async () => {
             if (selectedIndices.size === 0) return;
 
@@ -1582,7 +1460,7 @@
 
             try {
                 if (isSearchDialog) {
-                    // === Загрузка из результатов поиска ===
+                    // === Р—Р°РіСЂСѓР·РєР° РёР· СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ РїРѕРёСЃРєР° ===
                     for (const idx of selectedIndices) {
                         const entry = searchResults.find(e => e.index === idx);
                         if (entry && entry.url) {
@@ -1597,7 +1475,7 @@
                     updateButtonMode();
                     closePlaylistDialog();
                 } else {
-                    // === Загрузка из плейлиста (оригинальная логика) ===
+                    // === Р—Р°РіСЂСѓР·РєР° РёР· РїР»РµР№Р»РёСЃС‚Р° (РѕСЂРёРіРёРЅР°Р»СЊРЅР°СЏ Р»РѕРіРёРєР°) ===
                     const response = await fetch(`${API_URL}/api/playlist/download`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1611,7 +1489,7 @@
                     }
                 }
             } catch (err) {
-                console.error('Ошибка при загрузке:', err);
+                console.error('РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ:', err);
             } finally {
                 btn.disabled = false;
                 const countKey = isSearchDialog ? 'main.search_download_selected' : 'main.download_selected';
@@ -1619,7 +1497,7 @@
             }
         });
 
-        // Ренер списка загрузок
+        // Р РµРЅРµСЂ СЃРїРёСЃРєР° Р·Р°РіСЂСѓР·РѕРє
         const renderedTaskIds = new Set();
         const taskStatuses = new Map();
 
@@ -1820,89 +1698,52 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Toast уведомления
-        function showToast(message, title = '') {
-            const container = document.getElementById('toast-container');
-
-            const toast = document.createElement('div');
-            toast.className = 'bg-surface-container-low border border-outline-variant rounded-xl p-4 shadow-lg flex flex-col gap-2 animate-slide-in';
-
-            const titleHtml = title ? `<p class="text-sm font-semibold text-on-surface truncate">${escapeHtml(title)}</p>` : '';
-
-            toast.innerHTML = `
-        <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-amber-500 text-[22px] shrink-0 mt-0.5">warning</span>
-            <div class="flex-1 min-w-0">
-                ${titleHtml}
-                <p class="text-sm text-on-surface-variant">${escapeHtml(message)}</p>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="text-on-surface-variant hover:text-on-surface shrink-0">
-                <span class="material-symbols-outlined text-[18px]">close</span>
-            </button>
-        </div>
-    `;
-
-            container.appendChild(toast);
-
-            // Автоматическое удаление через 5 секунд
-            setTimeout(() => {
-                toast.classList.add('animate-slide-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-
-        // Действия с загрузками
+        // Р”РµР№СЃС‚РІРёСЏ СЃ Р·Р°РіСЂСѓР·РєР°РјРё
         window.removeTask = async function (id) {
             await fetch(`${API_URL}/api/download/${id}`, { method: 'DELETE' });
-            // Обновить список после удаления
+            // РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє РїРѕСЃР»Рµ СѓРґР°Р»РµРЅРёСЏ
             try {
                 const response = await fetch(`${API_URL}/api/downloads`);
                 const tasks = await response.json();
                 renderDownloads(tasks);
             } catch (err) {
-                console.error('Ошибка обновления списка:', err);
+                console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ СЃРїРёСЃРєР°:', err);
             }
         }
 
         window.pauseTask = async function (id) {
             await fetch(`${API_URL}/api/download/${id}/pause`, { method: 'POST' });
-            // Обновить список после паузы
+            // РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє РїРѕСЃР»Рµ РїР°СѓР·С‹
             try {
                 const response = await fetch(`${API_URL}/api/downloads`);
                 const tasks = await response.json();
                 renderDownloads(tasks);
             } catch (err) {
-                console.error('Ошибка обновления списка:', err);
+                console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ СЃРїРёСЃРєР°:', err);
             }
         }
 
         window.resumeTask = async function (id) {
             await fetch(`${API_URL}/api/download/${id}/resume`, { method: 'POST' });
-            // Обновить список после возобновления
+            // РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє РїРѕСЃР»Рµ РІРѕР·РѕР±РЅРѕРІР»РµРЅРёСЏ
             try {
                 const response = await fetch(`${API_URL}/api/downloads`);
                 const tasks = await response.json();
                 renderDownloads(tasks);
             } catch (err) {
-                console.error('Ошибка обновления списка:', err);
+                console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ СЃРїРёСЃРєР°:', err);
             }
         }
 
         window.cancelTask = async function (id) {
             await fetch(`${API_URL}/api/download/${id}/cancel`, { method: 'POST' });
-            // Обновить список после отмены
+            // РћР±РЅРѕРІРёС‚СЊ СЃРїРёСЃРѕРє РїРѕСЃР»Рµ РѕС‚РјРµРЅС‹
             try {
                 const response = await fetch(`${API_URL}/api/downloads`);
                 const tasks = await response.json();
                 renderDownloads(tasks);
             } catch (err) {
-                console.error('Ошибка обновления списка:', err);
+                console.error('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ СЃРїРёСЃРєР°:', err);
             }
         }
 
@@ -1969,10 +1810,10 @@
             await fetch(`${API_URL}/api/open-folder/${id}`, { method: 'POST' });
         }
 
-        // Инициализация
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
         connectWebSocket();
 
-        // Переключение темы
+        // РџРµСЂРµРєР»СЋС‡РµРЅРёРµ С‚РµРјС‹
         let isDarkTheme = false;
 
         document.getElementById('theme-toggle')?.addEventListener('click', async () => {
@@ -1988,7 +1829,7 @@
                 document.getElementById('theme-icon').textContent = 'dark_mode';
             }
 
-            // Сохраняем настройку на сервере
+            // РЎРѕС…СЂР°РЅСЏРµРј РЅР°СЃС‚СЂРѕР№РєСѓ РЅР° СЃРµСЂРІРµСЂРµ
             try {
                 const response = await fetch(`${API_URL}/api/settings`);
                 const settings = await response.json();
@@ -2000,11 +1841,11 @@
                     body: JSON.stringify({ settings })
                 });
             } catch (err) {
-                console.error('Ошибка сохранения темы:', err);
+                console.error('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ С‚РµРјС‹:', err);
             }
         });
 
-        // Загрузка настроек и применение темы
+        // Р—Р°РіСЂСѓР·РєР° РЅР°СЃС‚СЂРѕРµРє Рё РїСЂРёРјРµРЅРµРЅРёРµ С‚РµРјС‹
         async function loadThemeSettings() {
             try {
                 const response = await fetch(`${API_URL}/api/settings`);
@@ -2022,11 +1863,11 @@
                     document.getElementById('theme-icon').textContent = 'dark_mode';
                 }
             } catch (err) {
-                console.error('Ошибка загрузки настроек темы:', err);
+                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РЅР°СЃС‚СЂРѕРµРє С‚РµРјС‹:', err);
             }
         }
 
-        // Загрузка начального состояния
+        // Р—Р°РіСЂСѓР·РєР° РЅР°С‡Р°Р»СЊРЅРѕРіРѕ СЃРѕСЃС‚РѕСЏРЅРёСЏ
         async function loadInitialData() {
             try {
                 const [downloadsRes, statusRes] = await Promise.all([
@@ -2040,14 +1881,14 @@
                 renderDownloads(downloads);
                 activeCount.textContent = `${status.active_downloads} items`;
             } catch (err) {
-                console.error('Ошибка загрузки данных:', err);
+                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…:', err);
             }
         }
 
         loadThemeSettings();
         loadInitialData();
 
-        // Закрытие приложения
+        // Р—Р°РєСЂС‹С‚РёРµ РїСЂРёР»РѕР¶РµРЅРёСЏ
         document.getElementById('close-app')?.addEventListener('click', () => {
             if (window.pywebview && window.pywebview.api) {
                 window.pywebview.api.close();
@@ -2057,3 +1898,8 @@
 </body>
 
 </html>
+
+
+
+
+
