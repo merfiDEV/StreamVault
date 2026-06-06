@@ -606,6 +606,7 @@ tailwind.config = {
                     </div>
                     <button id="app-check" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold" data-i18n="settings.app_check"></button>
                     <button id="app-update" class="px-4 py-2 rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors text-sm font-semibold" data-i18n="settings.app_update"></button>
+                    <button id="app-diagnostics" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold" data-i18n="settings.app_diagnostics"></button>
                 </div>
                 <p id="app-hint" class="text-xs text-on-surface-variant"></p>
             </div>
@@ -1177,6 +1178,24 @@ async function updateStorageUsage() {
 
 updateStorageUsage();
 
+async function copyTextWithFallback(text) {
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return copied;
+}
+
 function setAppStatus(data) {
     const el = document.getElementById('app-version');
     const hint = document.getElementById('app-hint');
@@ -1194,6 +1213,13 @@ function setAppStatus(data) {
 
     if (data?.error) {
         hint.textContent = data.error;
+        return;
+    }
+
+    if (data?.update_blocked_reason) {
+        hint.textContent = data.update_blocked_reason;
+        hint.classList.remove('text-on-surface-variant', 'text-emerald-500');
+        hint.classList.add('text-error');
         return;
     }
 
@@ -1230,6 +1256,36 @@ async function refreshAppInfo({ notify = false } = {}) {
     } catch (err) {
         console.error('Ошибка проверки обновления приложения:', err);
         showToast(t('notifications.app_update_check_failed'), t('settings.app_label'), 'error');
+    }
+}
+
+async function copyAppDiagnostics() {
+    const btn = document.getElementById('app-diagnostics');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = '...';
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/app/update/diagnostics`);
+        const data = await res.json();
+        const payload = JSON.stringify(data, null, 2);
+        const copied = await copyTextWithFallback(payload);
+
+        if (copied) {
+            showToast(t('notifications.app_diagnostics_copied'), t('settings.app_label'), 'success');
+        } else {
+            showToast(t('notifications.app_diagnostics_failed'), t('settings.app_label'), 'error');
+        }
+    } catch (err) {
+        console.error('Ошибка копирования диагностики приложения:', err);
+        showToast(t('notifications.app_diagnostics_failed'), t('settings.app_label'), 'error');
+    }
+
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || t('settings.app_diagnostics');
     }
 }
 
@@ -1272,6 +1328,10 @@ document.getElementById('app-update')?.addEventListener('click', async () => {
         btn.disabled = false;
         btn.textContent = btn.dataset.originalText || t('settings.app_update');
     }
+});
+
+document.getElementById('app-diagnostics')?.addEventListener('click', async () => {
+    await copyAppDiagnostics();
 });
 
 function setYtDlpStatus(data) {

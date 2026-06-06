@@ -4,9 +4,11 @@ import asyncio
 import json
 import os
 import re
+import platform
 import shutil
 import subprocess
 import sys
+import zipfile
 import urllib.request
 import urllib.error
 from contextlib import asynccontextmanager
@@ -31,8 +33,11 @@ from core.utils import get_data_path, get_resource_path
 
 _i18n_cache: dict[str, dict] = {}
 GITHUB_REPO = "merfiDEV/StreamVault"
+GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 GITHUB_RELEASES_LATEST = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-APP_UPDATE_ASSET_NAME = "StreamVault.exe"
+APP_UPDATE_ASSET_NAME = "StreamVault.zip"
+_latest_release_cache: dict = {}
+_last_update_error: dict = {}
 
 
 def _load_locale(locale: str) -> dict | None:
@@ -53,71 +58,279 @@ def _version_tuple(version: str) -> tuple[int, ...]:
     return tuple(parts[:4]) if parts else (0,)
 
 
-def _fetch_latest_app_release() -> dict:
-    req = urllib.request.Request(
-        GITHUB_RELEASES_LATEST,
-        headers={"User-Agent": "StreamVault"},
-    )
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        payload = json.loads(resp.read().decode("utf-8", errors="replace"))
+def _short_error_text(err: Exception | str, limit: int = 500) -> str:
+    text = str(err or "").strip()
+    return text[:limit]
 
-    assets = payload.get("assets") or []
-    asset = next(
-        (
-            item
-            for item in assets
-            if str(item.get("name") or "").lower() == APP_UPDATE_ASSET_NAME.lower()
-        ),
-        None,
-    )
-    if asset is None and assets:
+
+def _build_update_error(code: str, step: str, message: str, *, exception: Exception | str | None = None, attempts: list | None = None, release: dict | None = None, extra: dict | None = None) -> dict:
+    payload = {
+        "ok": False,
+        "error": message,
+        "error_code": code,
+        "error_step": step,
+        "repo": GITHUB_REPO,
+        "repo_url": GITHUB_REPO_URL,
+        "current": APP_VERSION,
+        "attempts": attempts or [],
+    }
+    if exception is not None:
+        payload["error_details"] = _short_error_text(exception)
+    if release:
+        payload["current_release"] = {
+            "version": release.get("version", ""),
+            "name": release.get("name", ""),
+            "asset_name": release.get("asset_name", ""),
+            "published_at": release.get("published_at", ""),
+            "download_url": release.get("download_url", ""),
+        }
+    if extra:
+        payload.update(extra)
+
+    global _last_update_error
+    _last_update_error = payload
+    return payload
+
+
+def _github_release_urls(asset_name: str = APP_UPDATE_ASSET_NAME, version: str = "") -> list[str]:
+    urls = [GITHUB_RELEASES_LATEST]
+    normalized_asset = asset_name or APP_UPDATE_ASSET_NAME
+    if version:
+        clean_version = str(version).lstrip("v")
+        tag_candidates = [clean_version, f"v{clean_version}"]
+        for tag in tag_candidates:
+            urls.append(f"{GITHUB_REPO_URL}/releases/download/{tag}/{normalized_asset}")
+    urls.extend([
+        f"{GITHUB_REPO_URL}/releases/latest/download/{normalized_asset}",
+        f"{GITHUB_REPO_URL}/releases",
+    ])
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for url in urls:
+        if url not in seen:
+            seen.add(url)
+            ordered.append(url)
+    return ordered
+
+
+def _urlopen_json(url: str, timeout: int = 10) -> dict:
+    req = urllib.request.Request(url, headers={"User-Agent": "StreamVault"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", errors="replace"))
+
+
+def _update_workspace() -> Path:
+    appdata_root = Path(get_data_path("version.txt")).parent
+    return appdata_root / "updates"
+
+
+def _install_root() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path.cwd().resolve()
+
+
+def _current_install_mode() -> str:
+    install_root = _install_root()
+    markers = ("base_library.zip", "python311.dll", "python310.dll", "python39.dll")
+    if any((install_root / marker).exists() for marker in markers):
+        return "onedir"
+    return "onefile"
+
+
+def _expected_app_asset_name() -> str:
+    return "StreamVault.zip" if _current_install_mode() == "onedir" else "StreamVault.exe"
+
+
+def _asset_fallback_names() -> list[str]:
+    primary = _expected_app_asset_name()
+    secondary = "StreamVault.exe" if primary.lower().endswith(".zip") else "StreamVault.zip"
+    return [primary, secondary]
+
+
+def _fetch_latest_app_release() -> dict:
+    errors: list[dict] = []
+    try:
+        payload = _urlopen_json(GITHUB_RELEASES_LATEST, timeout=10)
+        assets = payload.get("assets") or []
+        preferred_assets = [name.lower() for name in _asset_fallback_names()]
         asset = next(
             (
                 item
                 for item in assets
-                if str(item.get("name") or "").lower().endswith(".exe")
+                if str(item.get("name") or "").lower() in preferred_assets
             ),
-            assets[0],
+            None,
         )
+        if asset is None and assets:
+            wanted_suffix = ".zip" if _current_install_mode() == "onedir" else ".exe"
+            asset = next(
+                (
+                    item
+                    for item in assets
+                    if str(item.get("name") or "").lower().endswith(wanted_suffix)
+                ),
+                assets[0],
+            )
 
-    latest_version = str(payload.get("tag_name") or "").lstrip("v")
-    return {
-        "version": latest_version,
-        "name": str(payload.get("name") or "").strip(),
-        "body": str(payload.get("body") or "").strip(),
-        "published_at": str(payload.get("published_at") or "").strip(),
-        "asset_name": str(asset.get("name") or "") if asset else "",
-        "download_url": str(asset.get("browser_download_url") or "") if asset else "",
-    }
+        latest_version = str(payload.get("tag_name") or "").lstrip("v")
+        release = {
+            "version": latest_version,
+            "name": str(payload.get("name") or "").strip(),
+            "body": str(payload.get("body") or "").strip(),
+            "published_at": str(payload.get("published_at") or "").strip(),
+            "asset_name": str(asset.get("name") or "") if asset else "",
+            "download_url": str(asset.get("browser_download_url") or "") if asset else "",
+            "source": "github_api",
+        }
+        global _latest_release_cache
+        _latest_release_cache = release
+        return release
+    except Exception as e:
+        errors.append({"url": GITHUB_RELEASES_LATEST, "error": _short_error_text(e)})
+
+    if _latest_release_cache:
+        cached = dict(_latest_release_cache)
+        cached["source"] = "cache"
+        cached["stale"] = True
+        cached["fetch_errors"] = errors
+        return cached
+
+    raise RuntimeError(json.dumps({"code": "release_fetch_failed", "attempts": errors}, ensure_ascii=False))
 
 
-def _spawn_update_installer(source_file: Path) -> None:
+def _download_release_asset(release: dict) -> tuple[Path, list[dict]]:
+    asset_name = release.get("asset_name") or _expected_app_asset_name()
+    version = release.get("version") or ""
+    expected_suffix = Path(asset_name).suffix.lower() or ".zip"
+    candidates: list[str] = []
+
+    if release.get("download_url"):
+        candidates.append(str(release["download_url"]))
+    candidates.extend(_github_release_urls(asset_name, version))
+
+    attempts: list[dict] = []
+    updates_dir = _update_workspace()
+    updates_dir.mkdir(parents=True, exist_ok=True)
+
+    archive_name = f"StreamVault-{version or 'latest'}{expected_suffix}"
+    archive_path = updates_dir / archive_name
+    temp_error = None
+
+    for url in candidates:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "StreamVault"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                with open(archive_path, "wb") as f:
+                    shutil.copyfileobj(resp, f)
+            if archive_path.stat().st_size <= 0:
+                raise RuntimeError("Downloaded file is empty")
+            return archive_path, attempts
+        except Exception as e:
+            temp_error = e
+            attempts.append({"url": url, "error": _short_error_text(e)})
+            try:
+                if archive_path.exists():
+                    archive_path.unlink()
+            except Exception:
+                pass
+
+    raise RuntimeError(
+        json.dumps(
+            {
+                "code": "release_download_failed",
+                "attempts": attempts,
+                "last_error": _short_error_text(temp_error),
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
+def _extract_release_archive(archive_path: Path, version: str = "") -> Path:
+    updates_dir = _update_workspace()
+    staging_root = updates_dir / f"staging-{version or 'latest'}"
+    if staging_root.exists():
+        shutil.rmtree(staging_root, ignore_errors=True)
+    staging_root.mkdir(parents=True, exist_ok=True)
+
+    try:
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            zf.extractall(staging_root)
+    except zipfile.BadZipFile as e:
+        raise RuntimeError(f"Invalid ZIP archive: {e}") from e
+
+    candidates: list[Path] = []
+    nested_bundle = staging_root / "StreamVault"
+    if nested_bundle.exists():
+        candidates.append(nested_bundle)
+    candidates.append(staging_root)
+    candidates.extend([item for item in staging_root.iterdir() if item.is_dir()])
+
+    for candidate in candidates:
+        if (candidate / "StreamVault.exe").exists():
+            return candidate
+
+    raise RuntimeError("Extracted archive does not contain StreamVault.exe")
+
+
+def _spawn_update_installer(source_dir: Path) -> None:
     if not getattr(sys, "frozen", False):
         raise RuntimeError("Автообновление поддерживается только в EXE-сборке.")
 
-    target_file = Path(sys.executable)
-    appdata_root = Path(get_data_path("version.txt")).parent
-    updates_dir = appdata_root / "updates"
-    updates_dir.mkdir(parents=True, exist_ok=True)
+    if _current_install_mode() != "onedir":
+        raise RuntimeError("Update installer is only supported for onedir builds.")
 
-    updater_script = updates_dir / "apply_update.ps1"
+    target_dir = _install_root()
+    updates_dir = _update_workspace()
+    updates_dir.mkdir(parents=True, exist_ok=True)
+    target_exe = target_dir / "StreamVault.exe"
+
+    updater_script = updates_dir / "apply_update.cmd"
     updater_script.write_text(
         dedent(
-            f"""
-            param(
-                [Parameter(Mandatory=$true)][string]$ProcessId,
-                [Parameter(Mandatory=$true)][string]$SourceFile,
-                [Parameter(Mandatory=$true)][string]$TargetFile
+            r"""
+            @echo off
+            setlocal enabledelayedexpansion
+
+            set "PID=%~1"
+            set "SOURCE=%~2"
+            set "TARGET=%~3"
+            set "BACKUP=%TARGET%.bak"
+            set "EXE=%~4"
+            set "TARGET_EXE=%TARGET%\%EXE%"
+
+            :wait_loop
+            tasklist /FI "PID eq %PID%" /NH | findstr /I /C:"%PID%" >nul
+            if %errorlevel%==0 (
+                timeout /t 1 /nobreak >nul
+                goto wait_loop
             )
 
-            $ErrorActionPreference = "Stop"
+            if exist "%BACKUP%" rmdir /S /Q "%BACKUP%" >nul 2>&1
+            if exist "%TARGET%" (
+                move /Y "%TARGET%" "%BACKUP%" >nul
+                if errorlevel 1 goto restore_old
+            )
 
-            while (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue) {{
-                Start-Sleep -Milliseconds 500
-            }}
+            robocopy "%SOURCE%" "%TARGET%" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+            if errorlevel 8 goto restore_old
 
-            Copy-Item -LiteralPath $SourceFile -Destination $TargetFile -Force
-            Start-Process -FilePath $TargetFile
+            start "" "%TARGET_EXE%"
+
+            timeout /t 15 /nobreak >nul
+            tasklist /FI "IMAGENAME eq %EXE%" /NH | findstr /I /C:"%EXE%" >nul
+            if errorlevel 1 goto restore_old
+
+            if exist "%BACKUP%" rmdir /S /Q "%BACKUP%" >nul 2>&1
+            if exist "%SOURCE%" rmdir /S /Q "%SOURCE%" >nul 2>&1
+            exit /b 0
+
+            :restore_old
+            if exist "%TARGET%" rmdir /S /Q "%TARGET%" >nul 2>&1
+            if exist "%BACKUP%" move /Y "%BACKUP%" "%TARGET%" >nul 2>&1
+            if exist "%TARGET_EXE%" start "" "%TARGET_EXE%"
+            exit /b 1
             """
         ).strip(),
         encoding="utf-8",
@@ -129,20 +342,13 @@ def _spawn_update_installer(source_file: Path) -> None:
 
     subprocess.Popen(
         [
-            "powershell",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-WindowStyle",
-            "Hidden",
-            "-File",
+            "cmd.exe",
+            "/c",
             str(updater_script),
-            "-ProcessId",
             str(os.getpid()),
-            "-SourceFile",
-            str(source_file),
-            "-TargetFile",
-            str(target_file),
+            str(source_dir),
+            str(target_dir),
+            "StreamVault.exe",
         ],
         **kwargs,
     )
@@ -150,40 +356,98 @@ def _spawn_update_installer(source_file: Path) -> None:
 
 def _download_latest_app_release() -> dict:
     if not getattr(sys, "frozen", False):
-        return {"error": "Автообновление поддерживается только в EXE-сборке."}
+        return _build_update_error(
+            "app_not_frozen",
+            "preflight",
+            "Автообновление поддерживается только в EXE-сборке.",
+            extra={"fallbacks": _github_release_urls()},
+        )
 
     if download_manager.get_active_count() > 0:
-        return {"error": "Есть активные загрузки. Остановите их перед обновлением приложения."}
+        return _build_update_error(
+            "downloads_active",
+            "preflight",
+            "Есть активные загрузки. Остановите их перед обновлением приложения.",
+            extra={"active_downloads": download_manager.get_active_count()},
+        )
 
-    release = _fetch_latest_app_release()
-    if not release["download_url"]:
-        return {"error": "Не удалось найти exe-asset в последнем релизе."}
+    install_mode = _current_install_mode()
+
+    try:
+        release = _fetch_latest_app_release()
+    except Exception as e:
+        return _build_update_error(
+            "release_fetch_failed",
+            "fetch_release",
+            "Не удалось получить информацию о релизе с GitHub.",
+            exception=e,
+            extra={
+                "fallbacks": _github_release_urls(),
+                "repo_url": GITHUB_REPO_URL,
+            },
+        )
+
+    if install_mode == "onedir" and not str(release.get("asset_name") or "").lower().endswith(".zip"):
+        return _build_update_error(
+            "asset_mismatch",
+            "select_asset",
+            "Последний релиз не содержит ZIP-архив для onedir-обновления.",
+            release=release,
+            extra={
+                "install_mode": install_mode,
+                "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+            },
+        )
+
+    if install_mode == "onefile" and not str(release.get("asset_name") or "").lower().endswith(".exe"):
+        return _build_update_error(
+            "asset_missing",
+            "select_asset",
+            "Последний релиз не содержит EXE-asset для onefile-обновления.",
+            release=release,
+            extra={
+                "install_mode": install_mode,
+                "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+            },
+        )
 
     if release["version"] and _version_tuple(release["version"]) <= _version_tuple(APP_VERSION):
-        return {"status": "up_to_date", **release, "current": APP_VERSION}
+        return {
+            "status": "up_to_date",
+            **release,
+            "current": APP_VERSION,
+            "repo_url": GITHUB_REPO_URL,
+            "install_mode": install_mode,
+            "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+        }
 
-    appdata_root = Path(get_data_path("version.txt")).parent
-    updates_dir = appdata_root / "updates"
-    updates_dir.mkdir(parents=True, exist_ok=True)
-
-    temp_name = f"StreamVault-{release['version'] or 'latest'}.new.exe"
-    temp_file = updates_dir / temp_name
-    req = urllib.request.Request(
-        release["download_url"],
-        headers={"User-Agent": "StreamVault"},
-    )
-
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        temp_file.write_bytes(resp.read())
-
-    _spawn_update_installer(temp_file)
-    return {
-        "status": "scheduled",
-        "current": APP_VERSION,
-        **release,
-        "downloaded_to": str(temp_file),
-        "target": str(Path(sys.executable) if getattr(sys, "frozen", False) else Path.cwd()),
-    }
+    try:
+        archive_path, attempts = _download_release_asset(release)
+        extracted_dir = _extract_release_archive(archive_path, release.get("version") or "")
+        _spawn_update_installer(extracted_dir)
+        return {
+            "status": "scheduled",
+            "current": APP_VERSION,
+            **release,
+            "downloaded_to": str(archive_path),
+            "extracted_to": str(extracted_dir),
+            "target": str(_install_root()),
+            "install_mode": install_mode,
+            "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+            "download_attempts": attempts,
+        }
+    except Exception as e:
+        return _build_update_error(
+            "release_download_failed",
+            "download_release",
+            "Не удалось скачать файл обновления.",
+            exception=e,
+            release=release,
+            extra={
+                "install_mode": install_mode,
+                "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+            },
+        )
 
 
 # --- Модели запросов/ответов ---
@@ -381,18 +645,37 @@ async def app_update_info():
         release = _fetch_latest_app_release()
         current = APP_VERSION
         latest = release["version"]
-        is_update_available = bool(latest) and _version_tuple(latest) > _version_tuple(current)
+        install_mode = _current_install_mode()
+        expected_asset = _expected_app_asset_name()
+        asset_name = str(release.get("asset_name") or "")
+        asset_ok = asset_name.lower().endswith(".zip") if install_mode == "onedir" else asset_name.lower().endswith(".exe")
+        is_update_available = bool(latest) and _version_tuple(latest) > _version_tuple(current) and asset_ok
         return {
             "current": current,
             "latest": latest,
             "is_update_available": is_update_available,
+            "install_mode": install_mode,
+            "expected_asset_name": expected_asset,
+            "asset_ok": asset_ok,
+            "update_blocked_reason": "" if asset_ok else f"Для этой сборки нужен релизный asset {expected_asset}",
             "release_name": release["name"],
             "asset_name": release["asset_name"],
             "published_at": release["published_at"],
             "notes": release["body"][:2000],
+            "source": release.get("source", "unknown"),
+            "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
         }
     except Exception as e:
-        return {"error": str(e)[:200], "current": APP_VERSION, "latest": ""}
+        cached = dict(_latest_release_cache) if _latest_release_cache else {}
+        return {
+            "error": str(e)[:200],
+            "current": APP_VERSION,
+            "latest": cached.get("version", ""),
+            "source": cached.get("source", "error"),
+            "stale": bool(cached),
+            "install_mode": _current_install_mode(),
+            "fallbacks": _github_release_urls(cached.get("asset_name") or _expected_app_asset_name(), cached.get("version") or ""),
+        }
 
 
 @app.post("/api/app/update")
@@ -404,6 +687,43 @@ async def app_update():
         return result
     except Exception as e:
         return {"error": str(e)[:200]}
+
+
+@app.get("/api/app/update/diagnostics")
+async def app_update_diagnostics():
+    settings = load_settings()
+    release = dict(_latest_release_cache) if _latest_release_cache else {}
+    return {
+        "app": {
+            "name": "StreamVault",
+            "version": APP_VERSION,
+            "repo": GITHUB_REPO,
+            "repo_url": GITHUB_REPO_URL,
+            "frozen": bool(getattr(sys, "frozen", False)),
+            "executable": str(sys.executable),
+        },
+        "runtime": {
+            "python": sys.version,
+            "platform": platform.platform(),
+            "os_name": os.name,
+            "cwd": str(Path.cwd()),
+        },
+        "update": {
+            "current": APP_VERSION,
+            "cached_release": release,
+            "last_error": dict(_last_update_error) if _last_update_error else {},
+            "install_mode": _current_install_mode(),
+            "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+        },
+        "downloads": {
+            "active_count": download_manager.get_active_count(),
+        },
+        "settings": {
+            "language": getattr(settings, "language", ""),
+            "save_location": getattr(settings, "save_location", ""),
+            "download_format": getattr(settings, "download_format", ""),
+        },
+    }
 
 
 @app.post("/api/ytdlp/update")

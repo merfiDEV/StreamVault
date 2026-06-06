@@ -1,9 +1,11 @@
-"""Скрипт для сборки StreamVault в один EXE файл."""
+"""Build StreamVault as onedir and package a ZIP release asset."""
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
 
 def build():
     root = Path(__file__).parent
@@ -13,31 +15,19 @@ def build():
         subprocess.check_call([str(venv_python), str(Path(__file__).resolve())])
         return
 
-    # 1. Проверяем наличие PyInstaller
     try:
-        import PyInstaller
+        import PyInstaller  # noqa: F401
     except ImportError:
         print("PyInstaller не установлен. Устанавливаю...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
 
-    # 2. Определяем пути
     dist = root / "dist"
-    build_dir = root / "build"
-    
-    # 3. Настройка иконки
+
     icon_path = root / ".assets" / "favicon.jpg"
     icon_arg = []
     if icon_path.exists():
-        # В идеале нужен .ico, но попробуем передать как есть 
-        # или просто добавим в ресурсы если PyInstaller не примет как иконку EXE
         icon_arg = [f"--icon={str(icon_path)}"]
 
-    # 4. Команда сборки
-    # --onefile: собрать в один файл
-    # --noconsole: не показывать окно консоли (только GUI)
-    # --add-data: добавить папки и файлы внутрь EXE
-    # Разделитель для --add-data в Windows это ';'
-    
     hidden_packages = [
         "uvicorn",
         "fastapi",
@@ -58,7 +48,6 @@ def build():
                 if mod != pkg:
                     hidden_args.extend([f"--hidden-import={mod}"])
     except Exception:
-        # Fallback to the package roots if hook helpers are unavailable.
         for pkg in hidden_packages:
             hidden_args.extend([f"--hidden-import={pkg}"])
 
@@ -66,7 +55,7 @@ def build():
         sys.executable,
         "-m",
         "PyInstaller",
-        "--onefile",
+        "--onedir",
         "--noconsole",
         "--name=StreamVault",
         "--clean",
@@ -75,21 +64,27 @@ def build():
         f"--add-data={str(root / 'yt-dlp.exe')};.",
         *icon_arg,
         *hidden_args,
-        "main.py"
+        "main.py",
     ]
 
     print("Начинаю сборку...")
     print(f"Команда: {' '.join(cmd)}")
-    
+
     try:
         subprocess.check_call(cmd)
-        print("\n" + "="*50)
+        bundle_dir = dist / "StreamVault"
+        archive_path = Path(
+            shutil.make_archive(str(dist / "StreamVault"), "zip", root_dir=dist, base_dir="StreamVault")
+        )
+        print("\n" + "=" * 50)
         print("СБОРКА ЗАВЕРШЕНА УСПЕШНО!")
-        print(f"Ваш файл находится здесь: {dist / 'StreamVault.exe'}")
-        print("="*50)
+        print(f"Папка приложения: {bundle_dir}")
+        print(f"ZIP для релиза: {archive_path}")
+        print("=" * 50)
     except subprocess.CalledProcessError as e:
         print(f"\nОшибка при сборке: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     build()
