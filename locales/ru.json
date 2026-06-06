@@ -120,6 +120,12 @@
     "storage_folder": "Папка загрузок: {size}",
     "storage_file_count": "{count} файлов"
     ,
+    "app_label": "Обновление приложения",
+    "app_versions": "Текущая: {current} • Последняя: {latest}",
+    "app_check": "Проверить",
+    "app_update": "Скачать",
+    "app_update_available": "Доступно обновление приложения",
+    "app_updating": "Скачивание...",
     "ytdlp_label": "yt-dlp",
     "ytdlp_versions": "Текущая: {current} • Последняя: {latest}",
     "ytdlp_check": "Проверить",
@@ -171,7 +177,14 @@
     "ytdlp_updated": "yt-dlp обновлён до {version}",
     "ytdlp_check_failed": "Не удалось проверить версию yt-dlp",
     "ytdlp_update_failed": "Не удалось обновить yt-dlp",
-    "ytdlp_status_unknown": "Не удалось получить информацию о версии yt-dlp"
+    "ytdlp_status_unknown": "Не удалось получить информацию о версии yt-dlp",
+    "app_updating": "Проверка и загрузка обновления приложения...",
+    "app_up_to_date": "Приложение уже актуально (v{version})",
+    "app_update_available": "Доступно обновление приложения: {current} → {latest}",
+    "app_update_scheduled": "Обновление загружено. Приложение перезапустится",
+    "app_update_failed": "Не удалось обновить приложение",
+    "app_update_check_failed": "Не удалось проверить обновление приложения",
+    "app_status_unknown": "Не удалось получить информацию о версии приложения"
   },
   "languages": {
     "ru": "Русский",

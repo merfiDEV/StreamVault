@@ -3,12 +3,15 @@
 import asyncio
 import json
 import os
+import re
 import shutil
 import subprocess
+import sys
 import urllib.request
 import urllib.error
 from contextlib import asynccontextmanager
 from pathlib import Path
+from textwrap import dedent
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
@@ -20,12 +23,16 @@ from pydantic import BaseModel
 from core.config import Settings, load_settings, save_settings, ensure_save_location
 from core.downloader import download_manager, DownloadStatus
 from core.history import history_manager, HistoryRecord
-from core.utils import get_resource_path
+from core.version import APP_VERSION
+from core.utils import get_data_path, get_resource_path
 
 
 # --- i18n (интернационализация) ---
 
 _i18n_cache: dict[str, dict] = {}
+GITHUB_REPO = "merfiDEV/StreamVault"
+GITHUB_RELEASES_LATEST = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+APP_UPDATE_ASSET_NAME = "StreamVault.exe"
 
 
 def _load_locale(locale: str) -> dict | None:
@@ -39,6 +46,144 @@ def _load_locale(locale: str) -> dict | None:
         data = json.load(f)
     _i18n_cache[locale] = data
     return data
+
+
+def _version_tuple(version: str) -> tuple[int, ...]:
+    parts = [int(chunk) for chunk in re.findall(r"\d+", version or "")]
+    return tuple(parts[:4]) if parts else (0,)
+
+
+def _fetch_latest_app_release() -> dict:
+    req = urllib.request.Request(
+        GITHUB_RELEASES_LATEST,
+        headers={"User-Agent": "StreamVault"},
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        payload = json.loads(resp.read().decode("utf-8", errors="replace"))
+
+    assets = payload.get("assets") or []
+    asset = next(
+        (
+            item
+            for item in assets
+            if str(item.get("name") or "").lower() == APP_UPDATE_ASSET_NAME.lower()
+        ),
+        None,
+    )
+    if asset is None and assets:
+        asset = next(
+            (
+                item
+                for item in assets
+                if str(item.get("name") or "").lower().endswith(".exe")
+            ),
+            assets[0],
+        )
+
+    latest_version = str(payload.get("tag_name") or "").lstrip("v")
+    return {
+        "version": latest_version,
+        "name": str(payload.get("name") or "").strip(),
+        "body": str(payload.get("body") or "").strip(),
+        "published_at": str(payload.get("published_at") or "").strip(),
+        "asset_name": str(asset.get("name") or "") if asset else "",
+        "download_url": str(asset.get("browser_download_url") or "") if asset else "",
+    }
+
+
+def _spawn_update_installer(source_file: Path) -> None:
+    if not getattr(sys, "frozen", False):
+        raise RuntimeError("Автообновление поддерживается только в EXE-сборке.")
+
+    target_file = Path(sys.executable)
+    appdata_root = Path(get_data_path("version.txt")).parent
+    updates_dir = appdata_root / "updates"
+    updates_dir.mkdir(parents=True, exist_ok=True)
+
+    updater_script = updates_dir / "apply_update.ps1"
+    updater_script.write_text(
+        dedent(
+            f"""
+            param(
+                [Parameter(Mandatory=$true)][string]$ProcessId,
+                [Parameter(Mandatory=$true)][string]$SourceFile,
+                [Parameter(Mandatory=$true)][string]$TargetFile
+            )
+
+            $ErrorActionPreference = "Stop"
+
+            while (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue) {{
+                Start-Sleep -Milliseconds 500
+            }}
+
+            Copy-Item -LiteralPath $SourceFile -Destination $TargetFile -Force
+            Start-Process -FilePath $TargetFile
+            """
+        ).strip(),
+        encoding="utf-8",
+    )
+
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+    subprocess.Popen(
+        [
+            "powershell",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-WindowStyle",
+            "Hidden",
+            "-File",
+            str(updater_script),
+            "-ProcessId",
+            str(os.getpid()),
+            "-SourceFile",
+            str(source_file),
+            "-TargetFile",
+            str(target_file),
+        ],
+        **kwargs,
+    )
+
+
+def _download_latest_app_release() -> dict:
+    if not getattr(sys, "frozen", False):
+        return {"error": "Автообновление поддерживается только в EXE-сборке."}
+
+    if download_manager.get_active_count() > 0:
+        return {"error": "Есть активные загрузки. Остановите их перед обновлением приложения."}
+
+    release = _fetch_latest_app_release()
+    if not release["download_url"]:
+        return {"error": "Не удалось найти exe-asset в последнем релизе."}
+
+    if release["version"] and _version_tuple(release["version"]) <= _version_tuple(APP_VERSION):
+        return {"status": "up_to_date", **release, "current": APP_VERSION}
+
+    appdata_root = Path(get_data_path("version.txt")).parent
+    updates_dir = appdata_root / "updates"
+    updates_dir.mkdir(parents=True, exist_ok=True)
+
+    temp_name = f"StreamVault-{release['version'] or 'latest'}.new.exe"
+    temp_file = updates_dir / temp_name
+    req = urllib.request.Request(
+        release["download_url"],
+        headers={"User-Agent": "StreamVault"},
+    )
+
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        temp_file.write_bytes(resp.read())
+
+    _spawn_update_installer(temp_file)
+    return {
+        "status": "scheduled",
+        "current": APP_VERSION,
+        **release,
+        "downloaded_to": str(temp_file),
+        "target": str(Path(sys.executable) if getattr(sys, "frozen", False) else Path.cwd()),
+    }
 
 
 # --- Модели запросов/ответов ---
@@ -228,6 +373,37 @@ async def ytdlp_info():
     current = _run_ytdlp_version()
     latest = _fetch_latest_ytdlp_tag()
     return {"current": current, "latest": latest, "path": str(download_manager.ytdlp_path)}
+
+
+@app.get("/api/app/update/info")
+async def app_update_info():
+    try:
+        release = _fetch_latest_app_release()
+        current = APP_VERSION
+        latest = release["version"]
+        is_update_available = bool(latest) and _version_tuple(latest) > _version_tuple(current)
+        return {
+            "current": current,
+            "latest": latest,
+            "is_update_available": is_update_available,
+            "release_name": release["name"],
+            "asset_name": release["asset_name"],
+            "published_at": release["published_at"],
+            "notes": release["body"][:2000],
+        }
+    except Exception as e:
+        return {"error": str(e)[:200], "current": APP_VERSION, "latest": ""}
+
+
+@app.post("/api/app/update")
+async def app_update():
+    try:
+        result = _download_latest_app_release()
+        if "error" in result:
+            return result
+        return result
+    except Exception as e:
+        return {"error": str(e)[:200]}
 
 
 @app.post("/api/ytdlp/update")

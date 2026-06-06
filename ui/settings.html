@@ -594,6 +594,22 @@ tailwind.config = {
                 </div>
             </div>
 
+            <!-- App update -->
+            <div class="p-4 bg-surface-container-lowest rounded-xl mb-4">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="p-3 bg-primary-container/10 rounded-xl">
+                        <span class="material-symbols-outlined text-primary">system_update_alt</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-on-surface" data-i18n="settings.app_label"></p>
+                        <p id="app-version" class="text-sm text-on-surface-variant">—</p>
+                    </div>
+                    <button id="app-check" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold" data-i18n="settings.app_check"></button>
+                    <button id="app-update" class="px-4 py-2 rounded-full bg-primary text-on-primary hover:bg-primary/90 transition-colors text-sm font-semibold" data-i18n="settings.app_update"></button>
+                </div>
+                <p id="app-hint" class="text-xs text-on-surface-variant"></p>
+            </div>
+
             <!-- yt-dlp update -->
             <div class="p-4 bg-surface-container-lowest rounded-xl">
                 <div class="flex items-center gap-4 mb-3">
@@ -1161,6 +1177,103 @@ async function updateStorageUsage() {
 
 updateStorageUsage();
 
+function setAppStatus(data) {
+    const el = document.getElementById('app-version');
+    const hint = document.getElementById('app-hint');
+    const current = data?.current || '—';
+    const latest = data?.latest || '—';
+
+    if (el) {
+        el.textContent = t('settings.app_versions', { current, latest });
+    }
+
+    if (!hint) return;
+
+    hint.classList.remove('text-primary', 'text-emerald-500', 'text-error');
+    hint.classList.add('text-on-surface-variant');
+
+    if (data?.error) {
+        hint.textContent = data.error;
+        return;
+    }
+
+    if (data?.is_update_available) {
+        hint.textContent = t('settings.app_update_available');
+        hint.classList.remove('text-on-surface-variant');
+        hint.classList.add('text-primary');
+    } else if (data?.current && data?.latest) {
+        hint.textContent = t('notifications.app_up_to_date', { version: data.current });
+        hint.classList.remove('text-on-surface-variant');
+        hint.classList.add('text-emerald-500');
+    } else {
+        hint.textContent = '';
+    }
+}
+
+async function refreshAppInfo({ notify = false } = {}) {
+    try {
+        const res = await fetch(`${API_URL}/api/app/update/info`);
+        const data = await res.json();
+        setAppStatus(data);
+
+        if (notify) {
+            if (data?.error) {
+                showToast(data.error, t('settings.app_label'), 'error');
+            } else if (data?.is_update_available) {
+                showToast(t('notifications.app_update_available', { current: data.current, latest: data.latest }), t('settings.app_label'), 'warning');
+            } else if (data?.current && data?.latest) {
+                showToast(t('notifications.app_up_to_date', { version: data.current }), t('settings.app_label'), 'success');
+            } else {
+                showToast(t('notifications.app_status_unknown'), t('settings.app_label'), 'info');
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка проверки обновления приложения:', err);
+        showToast(t('notifications.app_update_check_failed'), t('settings.app_label'), 'error');
+    }
+}
+
+document.getElementById('app-check')?.addEventListener('click', async () => {
+    await refreshAppInfo({ notify: true });
+});
+
+document.getElementById('app-update')?.addEventListener('click', async () => {
+    const btn = document.getElementById('app-update');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = t('settings.app_updating');
+    }
+
+    showToast(t('notifications.app_updating'), t('settings.app_label'), 'info');
+
+    try {
+        const res = await fetch(`${API_URL}/api/app/update`, { method: 'POST' });
+        const data = await res.json();
+
+        if (data?.error) {
+            showToast(data.error, t('settings.app_label'), 'error');
+        } else if (data?.status === 'up_to_date') {
+            showToast(t('notifications.app_up_to_date', { version: data.current || '—' }), t('settings.app_label'), 'success');
+        } else {
+            showToast(t('notifications.app_update_scheduled', { version: data.latest || '—' }), t('settings.app_label'), 'success');
+            setTimeout(() => {
+                if (window.pywebview && window.pywebview.api) {
+                    window.pywebview.api.close();
+                }
+            }, 800);
+        }
+    } catch (err) {
+        console.error('Ошибка обновления приложения:', err);
+        showToast(t('notifications.app_update_failed'), t('settings.app_label'), 'error');
+    }
+
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || t('settings.app_update');
+    }
+});
+
 function setYtDlpStatus(data) {
     const el = document.getElementById('ytdlp-version');
     const hint = document.getElementById('ytdlp-hint');
@@ -1244,6 +1357,7 @@ document.getElementById('ytdlp-update')?.addEventListener('click', async () => {
 });
 
 refreshYtDlpInfo();
+refreshAppInfo();
 
 // РћР±СЂР°Р±РѕС‚РєР° С‚СѓРјР±Р»РµСЂР° SponsorBlock (РїРѕРєР°Р· РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ)
 document.getElementById('sponsorblock-toggle')?.addEventListener('change', (e) => {
