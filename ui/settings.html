@@ -61,10 +61,10 @@
 }
 
 :root.dark {
-    --primary: #ffb4a8;
-    --on-primary: #690000;
-    --primary-container: #930100;
-    --on-primary-container: #ffdad4;
+    --primary: #ff8a65;
+    --on-primary: #2d1208;
+    --primary-container: #ff7043;
+    --on-primary-container: #fff1eb;
     --secondary: #c8c6c5;
     --on-secondary: #303030;
     --secondary-container: #474746;
@@ -92,10 +92,10 @@
     --surface-container-highest: #333535;
     --surface-dim: #111414;
     --surface-bright: #373a3a;
-    --surface-tint: #ffb4a8;
+    --surface-tint: #ff8a65;
     --inverse-surface: #e2e2e2;
     --inverse-on-surface: #2f3131;
-    --inverse-primary: #bc0100;
+    --inverse-primary: #ff8a65;
     --primary-fixed: #ffdad4;
     --on-primary-fixed: #410000;
     --primary-fixed-dim: #ffb4a8;
@@ -127,7 +127,7 @@ h1, h2, h3 {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
 }
 .dark .signature-gradient {
-    background: linear-gradient(135deg, #bc0100 0%, #eb0000 100%);
+    background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
 }
 /* РљР°СЃС‚РѕРјРЅС‹Р№ СЃРєСЂРѕР»Р»Р±Р°СЂ РїРѕРґ РґРёР·Р°Р№РЅ */
 * {
@@ -247,11 +247,11 @@ tailwind.config = {
         <a href="/history" class="p-2 -ml-2 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400" data-i18n-title="common.history" title="">
             <span class="material-symbols-outlined">history</span>
         </a>
-        <h1 class="text-2xl font-bold text-red-700 dark:text-red-500 font-['Plus_Jakarta_Sans'] tracking-tight ml-2" data-i18n="settings.page_title"></h1>
+        <h1 class="text-2xl font-bold text-primary font-['Plus_Jakarta_Sans'] tracking-tight ml-2" data-i18n="settings.page_title"></h1>
     </div>
     <div class="flex items-center gap-2">
         <button id="save-btn" class="signature-gradient text-on-primary px-6 py-2 rounded-full font-headline font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-lg shadow-primary/20 disabled:opacity-50" data-i18n="common.save"></button>
-        <button id="close-app" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-red-600 dark:hover:text-red-400" data-i18n-title="common.close_app" title="">
+        <button id="close-app" class="p-2 rounded-full hover:bg-primary/10 dark:hover:bg-primary/15 transition-colors active:scale-95 duration-300 text-stone-600 dark:text-stone-400 hover:text-primary dark:hover:text-primary" data-i18n-title="common.close_app" title="">
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
