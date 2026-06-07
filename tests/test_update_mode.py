@@ -105,8 +105,8 @@ def test_onefile_installer_runs_outside_install_root(monkeypatch, tmp_path):
 def test_update_info_reports_blocked_when_update_in_progress(monkeypatch):
     monkeypatch.setattr(main, "_current_install_mode", lambda: "onefile")
     monkeypatch.setattr(main, "_fetch_latest_app_release", lambda force=False: {
-        "version": "0.23.1",
-        "name": "Release 0.23.1",
+        "version": "0.24.1",
+        "name": "Release 0.24.1",
         "body": "fixes",
         "published_at": "2026-06-06T23:06:23Z",
         "asset_name": "StreamVault.exe",
@@ -124,8 +124,8 @@ def test_update_info_reports_blocked_when_update_in_progress(monkeypatch):
 def test_update_info_reports_asset_blocked_reason(monkeypatch):
     monkeypatch.setattr(main, "_current_install_mode", lambda: "onedir")
     monkeypatch.setattr(main, "_fetch_latest_app_release", lambda force=False: {
-        "version": "0.23.1",
-        "name": "Release 0.23.1",
+        "version": "0.24.1",
+        "name": "Release 0.24.1",
         "body": "fixes",
         "published_at": "2026-06-06T23:06:23Z",
         "asset_name": "StreamVault.exe",
@@ -200,15 +200,15 @@ def test_download_update_returns_scheduled_onefile(monkeypatch, tmp_path):
         return None
 
     release = {
-        "version": "0.23.1",
-        "name": "Release 0.23.1",
+        "version": "0.24.1",
+        "name": "Release 0.24.1",
         "body": "fixes",
         "published_at": "2026-06-06T23:06:23Z",
         "asset_name": "StreamVault.exe",
         "download_url": "https://example.invalid/StreamVault.exe",
         "source": "github_api",
     }
-    archive_path = tmp_path / "StreamVault-0.23.1.exe"
+    archive_path = tmp_path / "StreamVault-0.24.1.exe"
     calls = {}
 
     monkeypatch.setattr(main.sys, "frozen", True, raising=False)

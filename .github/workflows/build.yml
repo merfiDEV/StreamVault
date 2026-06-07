@@ -37,6 +37,19 @@ jobs:
         PYTHONPATH: .
       run: python -m pytest tests/
 
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.2
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        default_bump: minor
+        tag_prefix: "" # Используем формат 1.0, 1.1 без префикса 'v'
+
+    - name: Set app version from release tag
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: python scripts/set_app_version.py "${{ steps.tag_version.outputs.new_tag }}"
+
     - name: Build Onedir Release
       run: |
         $env:BUILD_MODE = "onedir"
@@ -46,15 +59,6 @@ jobs:
       run: |
         $env:BUILD_MODE = "onefile"
         python build.py
-
-    - name: Bump version and push tag
-      id: tag_version
-      uses: mathieudutour/github-tag-action@v6.2
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        default_bump: minor
-        tag_prefix: "" # Используем формат 1.0, 1.1 без префикса 'v'
 
     - name: Create a GitHub Release
       uses: softprops/action-gh-release@v2
