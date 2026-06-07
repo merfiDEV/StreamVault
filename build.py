@@ -63,6 +63,7 @@ def _build(mode: str) -> None:
     icon_arg = [f"--icon={str(icon_path)}"] if icon_path.exists() else []
 
     common_args = [
+        "--noconfirm",
         f"--add-data={str(root / 'ui')};ui",
         f"--add-data={str(root / 'locales')};locales",
         f"--add-data={str(root / 'yt-dlp.exe')};.",
