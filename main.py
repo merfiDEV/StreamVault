@@ -1,6 +1,7 @@
 """Главный файл приложения — FastAPI сервер + PyWebView."""
 
 import asyncio
+import ctypes
 import json
 import os
 import re
@@ -1085,6 +1086,139 @@ async def app_update():
         return await _download_latest_app_release_async()
     except Exception as e:
         return {"error": str(e)[:200]}
+
+
+def _desktop_path() -> Path:
+    if os.name == "nt":
+        buffer = ctypes.create_unicode_buffer(260)
+        # CSIDL_DESKTOPDIRECTORY points at the physical Desktop folder.
+        result = ctypes.windll.shell32.SHGetFolderPathW(None, 0x10, None, 0, buffer)
+        if result == 0 and buffer.value:
+            return Path(buffer.value)
+    return Path.home() / "Desktop"
+
+
+def _shortcut_target() -> tuple[Path, str, Path]:
+    if getattr(sys, "frozen", False):
+        target = Path(sys.executable).resolve()
+        return target, "", target.parent
+
+    script = Path(__file__).resolve()
+    target = Path(sys.executable).resolve()
+    return target, f'"{script}"', script.parent
+
+
+def _raise_for_hresult(hr: int, action: str) -> None:
+    if hr < 0:
+        raise OSError(hr, action)
+
+
+def _create_windows_shortcut(shortcut_path: Path, target: Path, arguments: str, working_dir: Path) -> None:
+    class GUID(ctypes.Structure):
+        _fields_ = [
+            ("Data1", ctypes.c_ulong),
+            ("Data2", ctypes.c_ushort),
+            ("Data3", ctypes.c_ushort),
+            ("Data4", ctypes.c_ubyte * 8),
+        ]
+
+    def guid(value: str) -> GUID:
+        import uuid
+
+        parsed = uuid.UUID(value)
+        data4 = (ctypes.c_ubyte * 8).from_buffer_copy(parsed.bytes[8:])
+        return GUID(parsed.time_low, parsed.time_mid, parsed.time_hi_version, data4)
+
+    clsid_shell_link = guid("00021401-0000-0000-C000-000000000046")
+    iid_shell_link = guid("000214F9-0000-0000-C000-000000000046")
+    iid_persist_file = guid("0000010B-0000-0000-C000-000000000046")
+
+    ole32 = ctypes.windll.ole32
+    shell_link = ctypes.c_void_p()
+    co_initialized = False
+
+    hr = ole32.CoInitialize(None)
+    if hr in (0, 1):
+        co_initialized = True
+    elif hr != -2147417850:  # RPC_E_CHANGED_MODE: COM is already initialized differently.
+        _raise_for_hresult(hr, "Не удалось инициализировать COM.")
+
+    try:
+        _raise_for_hresult(
+            ole32.CoCreateInstance(
+                ctypes.byref(clsid_shell_link),
+                None,
+                1,  # CLSCTX_INPROC_SERVER
+                ctypes.byref(iid_shell_link),
+                ctypes.byref(shell_link),
+            ),
+            "Не удалось создать ShellLink.",
+        )
+
+        shell_link_vtbl = ctypes.cast(shell_link, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+        set_description = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p)(shell_link_vtbl[7])
+        set_working_directory = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p)(shell_link_vtbl[9])
+        set_arguments = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p)(shell_link_vtbl[11])
+        set_icon_location = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int)(shell_link_vtbl[17])
+        set_path = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p)(shell_link_vtbl[20])
+
+        _raise_for_hresult(set_path(shell_link, str(target)), "Не удалось задать путь ярлыка.")
+        _raise_for_hresult(set_arguments(shell_link, arguments), "Не удалось задать аргументы ярлыка.")
+        _raise_for_hresult(set_working_directory(shell_link, str(working_dir)), "Не удалось задать рабочую папку ярлыка.")
+        _raise_for_hresult(set_icon_location(shell_link, str(target), 0), "Не удалось задать иконку ярлыка.")
+        _raise_for_hresult(set_description(shell_link, "StreamVault"), "Не удалось задать описание ярлыка.")
+
+        persist_file = ctypes.c_void_p()
+        query_interface = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.POINTER(GUID), ctypes.POINTER(ctypes.c_void_p))(shell_link_vtbl[0])
+        _raise_for_hresult(
+            query_interface(shell_link, ctypes.byref(iid_persist_file), ctypes.byref(persist_file)),
+            "Не удалось получить IPersistFile.",
+        )
+
+        try:
+            persist_vtbl = ctypes.cast(persist_file, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+            save = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int)(persist_vtbl[6])
+            _raise_for_hresult(save(persist_file, str(shortcut_path), True), "Не удалось сохранить ярлык.")
+        finally:
+            persist_vtbl = ctypes.cast(persist_file, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+            release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(persist_vtbl[2])
+            release(persist_file)
+    finally:
+        if shell_link:
+            shell_link_vtbl = ctypes.cast(shell_link, ctypes.POINTER(ctypes.POINTER(ctypes.c_void_p))).contents
+            release = ctypes.WINFUNCTYPE(ctypes.c_ulong, ctypes.c_void_p)(shell_link_vtbl[2])
+            release(shell_link)
+        if co_initialized:
+            ole32.CoUninitialize()
+
+
+def _create_app_shortcut() -> Path:
+    if os.name != "nt":
+        raise RuntimeError("Создание ярлыка поддерживается только в Windows.")
+
+    desktop = _desktop_path()
+    desktop.mkdir(parents=True, exist_ok=True)
+    shortcut_path = desktop / "StreamVault.lnk"
+    target, arguments, working_dir = _shortcut_target()
+
+    if not target.exists():
+        raise RuntimeError(f"Файл приложения не найден: {target}")
+
+    _create_windows_shortcut(shortcut_path, target, arguments, working_dir)
+
+    if not shortcut_path.exists():
+        raise RuntimeError("Windows завершил создание ярлыка без ошибки, но файл не был создан.")
+
+    return shortcut_path
+
+
+@app.post("/api/app/shortcut")
+async def app_shortcut():
+    try:
+        shortcut_path = await asyncio.get_running_loop().run_in_executor(None, _create_app_shortcut)
+        return {"status": "created", "path": str(shortcut_path)}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)[:300]})
 
 
 @app.get("/api/app/update/diagnostics")

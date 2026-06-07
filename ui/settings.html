@@ -477,21 +477,18 @@ tailwind.config = {
     <div class="mb-12">
         <h2 class="text-sm font-semibold uppercase tracking-widest text-on-surface-variant px-4 mb-4" data-i18n="settings.section_network"></h2>
         <div class="space-y-2">
-            <!-- WiFi Only Toggle -->
+            <!-- Desktop Shortcut -->
             <div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl">
                 <div class="flex items-center gap-4">
                     <div class="p-3 bg-primary-container/10 rounded-xl">
-                        <span class="material-symbols-outlined text-primary">wifi</span>
+                        <span class="material-symbols-outlined text-primary">add_to_home_screen</span>
                     </div>
                     <div>
-                        <p class="font-semibold text-on-surface" data-i18n="settings.wifi_only_label"></p>
-                        <p class="text-sm text-on-surface-variant" data-i18n="settings.wifi_only_desc"></p>
+                        <p class="font-semibold text-on-surface" data-i18n="settings.shortcut_label"></p>
+                        <p class="text-sm text-on-surface-variant" data-i18n="settings.shortcut_desc"></p>
                     </div>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input id="wifi-only-toggle" type="checkbox" class="sr-only peer">
-                    <div class="w-12 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                </label>
+                <button id="create-shortcut" class="px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed" data-i18n="settings.shortcut_create"></button>
             </div>
 
             <!-- Auto-clear Queue -->
@@ -830,7 +827,6 @@ function applySettings(settings) {
     
     document.getElementById('save-location-text').textContent = settings.save_location;
     document.getElementById('dark-theme-toggle').checked = settings.dark_theme;
-    document.getElementById('wifi-only-toggle').checked = settings.wifi_only;
     document.getElementById('auto-clear-toggle').checked = settings.auto_clear_queue;
     document.getElementById('random-filename-toggle').checked = settings.random_filename;
     document.getElementById('cookies-path-text').textContent = settings.cookies_path || t('settings.cookies_not_specified');
@@ -913,7 +909,7 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         save_location: currentSettings.save_location,
         max_concurrent_downloads: concurrentValue,
         dark_theme: document.getElementById('dark-theme-toggle').checked,
-        wifi_only: document.getElementById('wifi-only-toggle').checked,
+        wifi_only: currentSettings?.wifi_only ?? false,
         auto_clear_queue: document.getElementById('auto-clear-toggle').checked,
         random_filename: document.getElementById('random-filename-toggle').checked,
         enable_sponsorblock: document.getElementById('sponsorblock-toggle').checked,
@@ -1122,7 +1118,7 @@ async function saveSettingsAndReload() {
         save_location: currentSettings?.save_location || '',
         max_concurrent_downloads: concurrentValue,
         dark_theme: document.getElementById('dark-theme-toggle')?.checked ?? false,
-        wifi_only: document.getElementById('wifi-only-toggle')?.checked ?? false,
+        wifi_only: currentSettings?.wifi_only ?? false,
         auto_clear_queue: document.getElementById('auto-clear-toggle')?.checked ?? false,
         random_filename: document.getElementById('random-filename-toggle')?.checked ?? false,
         enable_sponsorblock: document.getElementById('sponsorblock-toggle')?.checked ?? false,
@@ -1164,6 +1160,33 @@ document.getElementById('random-filename-toggle')?.addEventListener('change', (e
         t('settings.random_filename_label'),
         e.target.checked ? 'success' : 'warning'
     );
+});
+
+document.getElementById('create-shortcut')?.addEventListener('click', async () => {
+    const btn = document.getElementById('create-shortcut');
+    if (btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.textContent = '...';
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/app/shortcut`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok || data?.error) {
+            showToast(data?.error || t('notifications.shortcut_failed'), t('settings.shortcut_label'), 'error');
+        } else {
+            showToast(t('notifications.shortcut_created'), t('settings.shortcut_label'), 'success');
+        }
+    } catch (err) {
+        console.error('Ошибка создания ярлыка:', err);
+        showToast(t('notifications.shortcut_failed'), t('settings.shortcut_label'), 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = btn.dataset.originalText || t('settings.shortcut_create');
+        }
+    }
 });
 
 // Р—Р°РіСЂСѓР·РєР° СЂРµР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С… С…СЂР°РЅРёР»РёС‰Р°

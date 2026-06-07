@@ -1,5 +1,6 @@
 import main
 import asyncio
+from pathlib import Path
 import zipfile
 
 
@@ -100,6 +101,54 @@ def test_onefile_installer_runs_outside_install_root(monkeypatch, tmp_path):
     main._spawn_onefile_update_installer(source_file)
 
     assert calls["kwargs"]["cwd"] == str(updates_dir)
+
+
+def test_create_app_shortcut_uses_desktop_lnk(monkeypatch, tmp_path):
+    desktop = tmp_path / "Desktop"
+    target = tmp_path / "StreamVault.exe"
+    target.write_bytes(b"MZ")
+    calls = {}
+
+    def fake_create_shortcut(shortcut_path: Path, target_path: Path, arguments: str, working_dir: Path):
+        calls["shortcut_path"] = shortcut_path
+        calls["target"] = target_path
+        calls["arguments"] = arguments
+        calls["working_dir"] = working_dir
+        shortcut_path.write_text("shortcut", encoding="utf-8")
+
+    monkeypatch.setattr(main.os, "name", "nt")
+    monkeypatch.setattr(main, "_desktop_path", lambda: desktop)
+    monkeypatch.setattr(main, "_shortcut_target", lambda: (target, "--web", target.parent))
+    monkeypatch.setattr(main, "_create_windows_shortcut", fake_create_shortcut)
+
+    shortcut = main._create_app_shortcut()
+
+    assert shortcut == desktop / "StreamVault.lnk"
+    assert shortcut.exists()
+    assert calls == {
+        "shortcut_path": desktop / "StreamVault.lnk",
+        "target": target,
+        "arguments": "--web",
+        "working_dir": target.parent,
+    }
+
+
+def test_create_app_shortcut_reports_windows_shortcut_error(monkeypatch, tmp_path):
+    desktop = tmp_path / "Desktop"
+    target = tmp_path / "StreamVault.exe"
+    target.write_bytes(b"MZ")
+
+    monkeypatch.setattr(main.os, "name", "nt")
+    monkeypatch.setattr(main, "_desktop_path", lambda: desktop)
+    monkeypatch.setattr(main, "_shortcut_target", lambda: (target, "", target.parent))
+    monkeypatch.setattr(main, "_create_windows_shortcut", lambda *args: (_ for _ in ()).throw(RuntimeError("boom")))
+
+    try:
+        main._create_app_shortcut()
+    except RuntimeError as exc:
+        assert "boom" in str(exc)
+    else:
+        raise AssertionError("shortcut creation failure was ignored")
 
 
 def test_update_info_reports_blocked_when_update_in_progress(monkeypatch):

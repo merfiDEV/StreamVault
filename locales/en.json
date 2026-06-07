@@ -93,8 +93,9 @@
     "dark_theme_label": "Dark theme",
     "dark_theme_desc": "Reduces eye strain at night",
     "section_network": "Network & System",
-    "wifi_only_label": "Download only on Wi-Fi",
-    "wifi_only_desc": "Avoid using mobile data",
+    "shortcut_label": "App shortcut",
+    "shortcut_desc": "Create a StreamVault shortcut on the desktop",
+    "shortcut_create": "Create",
     "auto_clear_label": "Auto-clear queue",
     "auto_clear_desc": "Remove tasks after successful download",
     "section_language": "Language",
@@ -184,7 +185,9 @@
     "app_update_scheduled": "Update downloaded. The app will restart",
     "app_update_failed": "Could not update the app",
     "app_update_check_failed": "Could not check for app updates",
-    "app_status_unknown": "Could not retrieve app version information"
+    "app_status_unknown": "Could not retrieve app version information",
+    "shortcut_created": "Shortcut created on the desktop",
+    "shortcut_failed": "Could not create shortcut"
   },
   "languages": {
     "ru": "Русский",
