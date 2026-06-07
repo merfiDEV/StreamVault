@@ -124,7 +124,6 @@
     "app_versions": "Installed: {current} • Latest: {latest}",
     "app_check": "Check",
     "app_update": "Download",
-    "app_diagnostics": "Diagnostics",
     "app_update_available": "App update available",
     "app_updating": "Downloading...",
     "ytdlp_label": "yt-dlp",
@@ -185,9 +184,7 @@
     "app_update_scheduled": "Update downloaded. The app will restart",
     "app_update_failed": "Could not update the app",
     "app_update_check_failed": "Could not check for app updates",
-    "app_status_unknown": "Could not retrieve app version information",
-    "app_diagnostics_copied": "Diagnostics copied to clipboard",
-    "app_diagnostics_failed": "Could not copy diagnostics"
+    "app_status_unknown": "Could not retrieve app version information"
   },
   "languages": {
     "ru": "Русский",

@@ -124,7 +124,6 @@
     "app_versions": "Текущая: {current} • Последняя: {latest}",
     "app_check": "Проверить",
     "app_update": "Скачать",
-    "app_diagnostics": "Диагностика",
     "app_update_available": "Доступно обновление приложения",
     "app_updating": "Скачивание...",
     "ytdlp_label": "yt-dlp",
@@ -185,9 +184,7 @@
     "app_update_scheduled": "Обновление загружено. Приложение перезапустится",
     "app_update_failed": "Не удалось обновить приложение",
     "app_update_check_failed": "Не удалось проверить обновление приложения",
-    "app_status_unknown": "Не удалось получить информацию о версии приложения",
-    "app_diagnostics_copied": "Диагностика скопирована в буфер обмена",
-    "app_diagnostics_failed": "Не удалось скопировать диагностику"
+    "app_status_unknown": "Не удалось получить информацию о версии приложения"
   },
   "languages": {
     "ru": "Русский",
