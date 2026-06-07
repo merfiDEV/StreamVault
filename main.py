@@ -8,9 +8,9 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 import urllib.request
-import urllib.error
 from contextlib import asynccontextmanager
 from pathlib import Path
 from textwrap import dedent
@@ -37,7 +37,10 @@ GITHUB_REPO_URL = f"https://github.com/{GITHUB_REPO}"
 GITHUB_RELEASES_LATEST = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 APP_UPDATE_ASSET_NAME = "StreamVault.zip"
 _latest_release_cache: dict = {}
+_latest_release_cache_time: float = 0.0
+_RELEASE_CACHE_TTL: float = 300.0
 _last_update_error: dict = {}
+_update_in_progress: bool = False
 
 
 def _load_locale(locale: str) -> dict | None:
@@ -132,8 +135,20 @@ def _install_root() -> Path:
 
 def _current_install_mode() -> str:
     install_root = _install_root()
-    markers = ("base_library.zip", "python311.dll", "python310.dll", "python39.dll")
+    internal_dir = install_root / "_internal"
+    markers = (
+        "base_library.zip",
+        "python313.dll",
+        "python312.dll",
+        "python311.dll",
+        "python310.dll",
+        "python39.dll",
+    )
+    if internal_dir.exists() and internal_dir.is_dir():
+        return "onedir"
     if any((install_root / marker).exists() for marker in markers):
+        return "onedir"
+    if any((internal_dir / marker).exists() for marker in markers):
         return "onedir"
     return "onefile"
 
@@ -148,7 +163,15 @@ def _asset_fallback_names() -> list[str]:
     return [primary, secondary]
 
 
-def _fetch_latest_app_release() -> dict:
+def _fetch_latest_app_release(force: bool = False) -> dict:
+    global _latest_release_cache, _latest_release_cache_time
+    now = time.monotonic()
+
+    if not force and _latest_release_cache and (now - _latest_release_cache_time) < _RELEASE_CACHE_TTL:
+        cached = dict(_latest_release_cache)
+        cached["source"] = "cache"
+        return cached
+
     errors: list[dict] = []
     try:
         payload = _urlopen_json(GITHUB_RELEASES_LATEST, timeout=10)
@@ -183,8 +206,8 @@ def _fetch_latest_app_release() -> dict:
             "download_url": str(asset.get("browser_download_url") or "") if asset else "",
             "source": "github_api",
         }
-        global _latest_release_cache
         _latest_release_cache = release
+        _latest_release_cache_time = time.monotonic()
         return release
     except Exception as e:
         errors.append({"url": GITHUB_RELEASES_LATEST, "error": _short_error_text(e)})
@@ -199,7 +222,10 @@ def _fetch_latest_app_release() -> dict:
     raise RuntimeError(json.dumps({"code": "release_fetch_failed", "attempts": errors}, ensure_ascii=False))
 
 
-def _download_release_asset(release: dict) -> tuple[Path, list[dict]]:
+def _download_release_asset(
+    release: dict,
+    progress_callback=None,
+) -> tuple[Path, list[dict]]:
     asset_name = release.get("asset_name") or _expected_app_asset_name()
     version = release.get("version") or ""
     expected_suffix = Path(asset_name).suffix.lower() or ".zip"
@@ -216,13 +242,28 @@ def _download_release_asset(release: dict) -> tuple[Path, list[dict]]:
     archive_name = f"StreamVault-{version or 'latest'}{expected_suffix}"
     archive_path = updates_dir / archive_name
     temp_error = None
+    chunk_size = 512 * 1024
 
     for url in candidates:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "StreamVault"})
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                total = int(resp.headers.get("Content-Length") or 0)
+                downloaded = 0
+                last_report = 0.0
                 with open(archive_path, "wb") as f:
-                    shutil.copyfileobj(resp, f)
+                    while True:
+                        chunk = resp.read(chunk_size)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        now = time.monotonic()
+                        if progress_callback and (now - last_report) >= 0.4:
+                            progress_callback(downloaded, total)
+                            last_report = now
+                if progress_callback:
+                    progress_callback(downloaded, total)
             if archive_path.stat().st_size <= 0:
                 raise RuntimeError("Downloaded file is empty")
             return archive_path, attempts
@@ -383,6 +424,7 @@ def _spawn_onefile_update_installer(source_file: Path) -> None:
             )
 
             copy /Y "%TARGET%" "%BACKUP%" >nul 2>&1
+            if errorlevel 1 goto restore_old
             copy /Y "%SOURCE%" "%TARGET%" >nul
             if errorlevel 1 goto restore_old
 
@@ -421,13 +463,22 @@ def _spawn_onefile_update_installer(source_file: Path) -> None:
     )
 
 
-def _download_latest_app_release() -> dict:
+async def _download_latest_app_release_async() -> dict:
+    global _update_in_progress
+
     if not getattr(sys, "frozen", False):
         return _build_update_error(
             "app_not_frozen",
             "preflight",
             "Автообновление поддерживается только в EXE-сборке.",
             extra={"fallbacks": _github_release_urls()},
+        )
+
+    if _update_in_progress:
+        return _build_update_error(
+            "update_in_progress",
+            "preflight",
+            "Обновление уже выполняется. Дождитесь завершения.",
         )
 
     if download_manager.get_active_count() > 0:
@@ -438,64 +489,114 @@ def _download_latest_app_release() -> dict:
             extra={"active_downloads": download_manager.get_active_count()},
         )
 
+    _update_in_progress = True
+    loop = asyncio.get_running_loop()
     install_mode = _current_install_mode()
 
     try:
-        release = _fetch_latest_app_release()
-    except Exception as e:
-        return _build_update_error(
-            "release_fetch_failed",
-            "fetch_release",
-            "Не удалось получить информацию о релизе с GitHub.",
-            exception=e,
-            extra={
-                "fallbacks": _github_release_urls(),
+        try:
+            release = await loop.run_in_executor(None, lambda: _fetch_latest_app_release(force=True))
+        except Exception as e:
+            return _build_update_error(
+                "release_fetch_failed",
+                "fetch_release",
+                "Не удалось получить информацию о релизе с GitHub.",
+                exception=e,
+                extra={
+                    "fallbacks": _github_release_urls(),
+                    "repo_url": GITHUB_REPO_URL,
+                },
+            )
+
+        if install_mode == "onedir" and not str(release.get("asset_name") or "").lower().endswith(".zip"):
+            return _build_update_error(
+                "asset_mismatch",
+                "select_asset",
+                "Последний релиз не содержит ZIP-архив для onedir-обновления.",
+                release=release,
+                extra={
+                    "install_mode": install_mode,
+                    "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+                },
+            )
+
+        if install_mode == "onefile" and not str(release.get("asset_name") or "").lower().endswith(".exe"):
+            return _build_update_error(
+                "asset_missing",
+                "select_asset",
+                "Последний релиз не содержит EXE-asset для onefile-обновления.",
+                release=release,
+                extra={
+                    "install_mode": install_mode,
+                    "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+                },
+            )
+
+        if release["version"] and _version_tuple(release["version"]) <= _version_tuple(APP_VERSION):
+            return {
+                "status": "up_to_date",
+                **release,
+                "current": APP_VERSION,
                 "repo_url": GITHUB_REPO_URL,
-            },
-        )
-
-    if install_mode == "onedir" and not str(release.get("asset_name") or "").lower().endswith(".zip"):
-        return _build_update_error(
-            "asset_mismatch",
-            "select_asset",
-            "Последний релиз не содержит ZIP-архив для onedir-обновления.",
-            release=release,
-            extra={
                 "install_mode": install_mode,
                 "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
-            },
-        )
+            }
 
-    if install_mode == "onefile" and not str(release.get("asset_name") or "").lower().endswith(".exe"):
-        return _build_update_error(
-            "asset_missing",
-            "select_asset",
-            "Последний релиз не содержит EXE-asset для onefile-обновления.",
-            release=release,
-            extra={
-                "install_mode": install_mode,
-                "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
-            },
-        )
+        def _send_progress(downloaded: int, total: int) -> None:
+            pct = round(downloaded / total * 100, 1) if total > 0 else 0
+            loop.call_soon_threadsafe(
+                asyncio.create_task,
+                manager.broadcast({
+                    "type": "update_progress",
+                    "stage": "downloading",
+                    "downloaded": downloaded,
+                    "total": total,
+                    "percent": pct,
+                }),
+            )
 
-    if release["version"] and _version_tuple(release["version"]) <= _version_tuple(APP_VERSION):
-        return {
-            "status": "up_to_date",
-            **release,
-            "current": APP_VERSION,
-            "repo_url": GITHUB_REPO_URL,
-            "install_mode": install_mode,
-            "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
-        }
+        def _sync_download() -> tuple[Path, list[dict]]:
+            return _download_release_asset(release, progress_callback=_send_progress)
 
-    try:
-        archive_path, attempts = _download_release_asset(release)
-        if install_mode == "onedir":
-            extracted_dir = _extract_release_archive(archive_path, release.get("version") or "")
-            _spawn_update_installer(extracted_dir)
-        else:
-            extracted_dir = None
-            _spawn_onefile_update_installer(archive_path)
+        await manager.broadcast({"type": "update_progress", "stage": "start", "percent": 0, "downloaded": 0, "total": 0})
+
+        try:
+            archive_path, attempts = await loop.run_in_executor(None, _sync_download)
+        except Exception as e:
+            await manager.broadcast({"type": "update_progress", "stage": "error", "percent": 0, "downloaded": 0, "total": 0})
+            return _build_update_error(
+                "release_download_failed",
+                "download_release",
+                "Не удалось скачать файл обновления.",
+                exception=e,
+                release=release,
+                extra={
+                    "install_mode": install_mode,
+                    "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
+                },
+            )
+
+        await manager.broadcast({"type": "update_progress", "stage": "extracting", "percent": 100, "downloaded": 0, "total": 0})
+        try:
+            if install_mode == "onedir":
+                extracted_dir = await loop.run_in_executor(
+                    None, lambda: _extract_release_archive(archive_path, release.get("version") or "")
+                )
+                _spawn_update_installer(extracted_dir)
+            else:
+                extracted_dir = None
+                _spawn_onefile_update_installer(archive_path)
+        except Exception as e:
+            await manager.broadcast({"type": "update_progress", "stage": "error", "percent": 100, "downloaded": 0, "total": 0})
+            return _build_update_error(
+                "install_failed",
+                "install",
+                "Ошибка при установке обновления.",
+                exception=e,
+                release=release,
+            )
+
+        await manager.broadcast({"type": "update_progress", "stage": "done", "percent": 100, "downloaded": 0, "total": 0})
         return {
             "status": "scheduled",
             "current": APP_VERSION,
@@ -507,18 +608,8 @@ def _download_latest_app_release() -> dict:
             "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
             "download_attempts": attempts,
         }
-    except Exception as e:
-        return _build_update_error(
-            "release_download_failed",
-            "download_release",
-            "Не удалось скачать файл обновления.",
-            exception=e,
-            release=release,
-            extra={
-                "install_mode": install_mode,
-                "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
-            },
-        )
+    finally:
+        _update_in_progress = False
 
 
 # --- Модели запросов/ответов ---
@@ -711,9 +802,10 @@ async def ytdlp_info():
 
 
 @app.get("/api/app/update/info")
-async def app_update_info():
+async def app_update_info(force: bool = False):
     try:
-        release = _fetch_latest_app_release()
+        loop = asyncio.get_running_loop()
+        release = await loop.run_in_executor(None, lambda: _fetch_latest_app_release(force=force))
         current = APP_VERSION
         latest = release["version"]
         install_mode = _current_install_mode()
@@ -721,14 +813,20 @@ async def app_update_info():
         asset_name = str(release.get("asset_name") or "")
         asset_ok = asset_name.lower().endswith(".zip") if install_mode == "onedir" else asset_name.lower().endswith(".exe")
         is_update_available = bool(latest) and _version_tuple(latest) > _version_tuple(current) and asset_ok
+        blocked_reason = ""
+        if _update_in_progress:
+            blocked_reason = "Обновление уже выполняется. Дождитесь завершения."
+        elif not asset_ok:
+            blocked_reason = f"Для этой сборки нужен релизный asset {expected_asset}"
         return {
             "current": current,
             "latest": latest,
             "is_update_available": is_update_available,
+            "update_in_progress": _update_in_progress,
             "install_mode": install_mode,
             "expected_asset_name": expected_asset,
             "asset_ok": asset_ok,
-            "update_blocked_reason": "" if asset_ok else f"Для этой сборки нужен релизный asset {expected_asset}",
+            "update_blocked_reason": blocked_reason,
             "release_name": release["name"],
             "asset_name": release["asset_name"],
             "published_at": release["published_at"],
@@ -744,7 +842,9 @@ async def app_update_info():
             "latest": cached.get("version", ""),
             "source": cached.get("source", "error"),
             "stale": bool(cached),
+            "update_in_progress": _update_in_progress,
             "install_mode": _current_install_mode(),
+            "update_blocked_reason": "Обновление уже выполняется. Дождитесь завершения." if _update_in_progress else "",
             "fallbacks": _github_release_urls(cached.get("asset_name") or _expected_app_asset_name(), cached.get("version") or ""),
         }
 
@@ -752,10 +852,7 @@ async def app_update_info():
 @app.post("/api/app/update")
 async def app_update():
     try:
-        result = _download_latest_app_release()
-        if "error" in result:
-            return result
-        return result
+        return await _download_latest_app_release_async()
     except Exception as e:
         return {"error": str(e)[:200]}
 
@@ -783,6 +880,7 @@ async def app_update_diagnostics():
             "current": APP_VERSION,
             "cached_release": release,
             "last_error": dict(_last_update_error) if _last_update_error else {},
+            "update_in_progress": _update_in_progress,
             "install_mode": _current_install_mode(),
             "fallbacks": _github_release_urls(release.get("asset_name") or _expected_app_asset_name(), release.get("version") or ""),
         },
@@ -798,19 +896,25 @@ async def app_update_diagnostics():
 
 
 @app.post("/api/ytdlp/update")
-def ytdlp_update():
+async def ytdlp_update():
     if download_manager.get_active_count() > 0:
         return {"error": "Есть активные загрузки. Остановите их перед обновлением yt-dlp."}
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
     target = Path(download_manager.ytdlp_path)
     tmp = target.with_suffix(".tmp")
-    try:
-        with urllib.request.urlopen(url, timeout=30) as resp:
-            data = resp.read()
-        tmp.write_bytes(data)
+    loop = asyncio.get_running_loop()
+
+    def _do_download():
+        req = urllib.request.Request(url, headers={"User-Agent": "StreamVault"})
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            with open(tmp, "wb") as f:
+                shutil.copyfileobj(resp, f, length=512 * 1024)
         tmp.replace(target)
+
+    try:
+        await loop.run_in_executor(None, _do_download)
         return {"status": "updated", "current": _run_ytdlp_version()}
-    except (urllib.error.URLError, OSError) as e:
+    except Exception as e:
         try:
             if tmp.exists():
                 tmp.unlink()
